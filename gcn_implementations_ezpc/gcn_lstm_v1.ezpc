@@ -1,0 +1,325 @@
+extern float_pl intToFloat(int32_pl m) ;
+
+extern void Softmax2(int32_pl s1, int32_pl s2, float_al[s1][s2] inArr, float_al[s1][s2] outArr) ;
+
+extern void Ln(int32_pl s1, float_al[s1] inArr, float_al[s1] outArr) ;
+
+extern void getOutDer(int32_pl s1, int32_pl s2, float_al[s1][s2] batchSoft, float_al[s1][s2] lab, float_al[s1][s2] der) ;
+
+extern void MatMul(int32_pl s1, int32_pl s2, int32_pl s3, float_al[s1][s2] mat1, float_al[s2][s3] mat2, float_al[s1][s3] mat3) ;
+
+extern void GemmAdd(int32_pl s1, int32_pl s2, float_al[s1][s2] prod, float_al[s2] bias, float_al[s1][s2] out) ;
+
+extern void dotProduct2(int32_pl s1, int32_pl s2, float_al[s1][s2] arr1, float_al[s1][s2] arr2, float_al[s1] outArr) ;
+
+extern void Relu(int32_pl s1, float_al[s1] inArr, float_al[s1] outArr, bool_bl[s1] hotArr) ;
+
+extern void getBiasDer(int32_pl s1, int32_pl s2, float_al[s1][s2] der, float_al[s2] biasDer) ;
+
+extern void IfElse(int32_pl s1, float_al[s1] dat, bool_bl[s1] hot, float_al[s1] out, bool_pl flip) ;
+
+extern void updateWeights(int32_pl s, float_pl lr, float_al[s] bias, float_al[s] der) ;
+
+extern void getLoss(int32_pl m, float_al[m] lossTerms, float_al[1] loss) ;
+
+extern void computeMSELoss(int32_pl m, int32_pl s, float_al[m][s] target, float_al[m][s] fwdOut, float_al[1] loss) ;
+
+def void Reassign2(int32_pl s1, int32_pl s2, float_al[s1][s2] arr1, float_al[s1][s2] arr2) {
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			arr2[i1][i2] = arr1[i1][i2] ;
+		} ;
+	} ;
+}
+
+def void Transpose(int32_pl s1, int32_pl s2, int32_pl s3, float_al[s1][s2][s3] inArr, float_al[s1][s3][s2] outArr) {
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			for i3=[0:s3]
+			{
+			outArr[i1][i3][i2] = inArr[i1][i2][i3] ;
+			} ;
+		} ;
+	};
+}
+
+
+def void Relu3(int32_pl s1, int32_pl s2, int32_pl s3, float_al[s1][s2][s3] inArr, float_al[s1][s2][s3] outArr, bool_bl[s1][s2][s3] hotArr) {
+	int32_pl sz = s1*s2*s3 ;
+	
+	bool_bl[sz] hotFlat;
+	float_al[sz] inFlat ;
+	float_al[sz] outFlat ;
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			for i3=[0:s3]{
+				inFlat[i1*s2*s3 + i2*s3+ i3] = inArr[i1][i2][i3] ;
+				hotFlat[i1*s2*s3 + i2*s3+ i3] = hotArr[i1][i2][i3] ;
+			} ;
+		} ;
+	} ;
+
+	Relu(sz, inFlat, outFlat, hotFlat) ;
+	
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			for i3=[0:s3]{
+				outArr[i1][i2][i3]= outFlat[i1*s2*s3 + i2*s3+ i3] ;
+			} ;
+		} ;
+	} ;
+}
+
+def void GemmAdd3(int32_pl s1, int32_pl s2, int32_pl s3, float_al[s1][s2][s3] prod, float_al[s3] bias, float_al[s1][s2][s3] out)
+{
+	for i1=[0:s1]
+	{
+		for i2=[0:s2]
+		{
+			for i3=[0:s3]
+			{
+				out[i1][i2][i3]=prod[i1][i2][i3]+bias[i3];
+			};
+		};
+	};
+}
+
+
+def void Ln2(int32_pl s1, int32_pl s2, float_al[s1][s2] inArr, float_al[s1][s2] outArr) {
+	int32_pl sz = s1*s2 ;
+
+	float_al[sz] inFlat ;
+	float_al[sz] outFlat ;
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			inFlat[i1*s2 + i2] = inArr[i1][i2] ;
+		} ;
+	} ;
+
+	Ln(sz, inFlat, outFlat) ;
+
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			outArr[i1][i2] = outFlat[i1*s2 + i2] ;
+		} ;
+	} ;
+}
+
+def void Relu2(int32_pl s1, int32_pl s2, float_al[s1][s2] inArr, float_al[s1][s2] outArr, bool_bl[s1][s2] hotArr) {
+	int32_pl sz = s1*s2 ;
+
+	float_al[sz] inArrFlat ;
+	float_al[sz] outArrFlat ;
+	bool_bl[sz] hotArrFlat ;
+
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			inArrFlat[i1*s2 + i2] = inArr[i1][i2] ;  
+		} ;
+	} ;
+
+	Relu(sz, inArrFlat, outArrFlat, hotArrFlat) ;
+
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			outArr[i1][i2] = outArrFlat[i1*s2 + i2] ;
+			hotArr[i1][i2] = hotArrFlat[i1*s2 + i2] ;
+		} ;
+	} ;
+}
+
+def void updateWeights2(int32_pl s1, int32_pl s2, float_pl lr, float_al[s1][s2] weight, float_al[s1][s2] der) {
+	int32_pl sz = s1*s2 ;
+
+	float_al[sz] weightFlat ;
+	float_al[sz] derFlat ;
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			weightFlat[i1*s2 + i2] = weight[i1][i2] ;
+			derFlat[i1*s2 + i2] = der[i1][i2] ;
+		} ; 
+	} ;
+
+	updateWeights(sz, lr, weightFlat, derFlat) ;
+
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			weight[i1][i2] = weightFlat[i1*s2 + i2] ;
+		} ; 
+	} ;
+}
+
+def void IfElse2(int32_pl s1, int32_pl s2, float_al[s1][s2] dat, bool_bl[s1][s2] hot, float_al[s1][s2] out, bool_pl flip) {
+	int32_pl sz = s1*s2 ;
+
+	float_al[sz] datFlat ;
+	bool_bl[sz] hotFlat ;
+	float_al[sz] outFlat ;
+
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			datFlat[i1*s2 + i2] = dat[i1][i2] ;
+			hotFlat[i1*s2 + i2] = hot[i1][i2] ;
+		} ;
+	} ;
+
+	IfElse(sz, datFlat, hotFlat, outFlat, flip) ;
+
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			out[i1][i2] = outFlat[i1*s2 + i2] ;
+		} ; 
+	} ;
+}
+
+def void Sigmoid2(int32_pl s1, int32_pl s2, float_al[s1][s2] inArr, float_al[s1][s2] outArr)
+{
+
+}
+
+def void Tanh2(int32_pl s1, int32_pl s2, float_al[s1][s2] inArr, float_al[s1][s2] outArr)
+{
+
+}
+
+def void ElemProd(int32_pl s1, int32_pl s2, float_al[s1][s2] arr1, float_al[s1][s2] arr2, float_al[s1][s2] outArr)
+{
+		for i1=[0:s1] {
+			for i2=[0:s2] 
+			{
+			outArr[i1][i2] = arr1[i1][i2]*arr2[i1][i2];
+			}; 
+		};
+}
+
+def void ElemProd3(int32_pl s1, int32_pl s2, int32_pl s3, float_al[s1][s2][s3] arr1, float_al[s1][s2][s3] arr2, float_al[s1][s2][s3] outArr)
+{
+		for i1=[0:s1]
+		{
+			for i2=[0:s2] 
+			{
+				for i3=[0:s3] {
+					outArr[i1][i2][i3] = arr1[i1][i2][i3]*arr2[i1][i2][i3];
+			}; 
+		};
+	};
+}
+
+def void computeCELoss(int32_pl m, int32_pl s2, float_al[m][s2] labels, float_al[m][s2] batchSoft, float_al[1] loss) {
+	float_al[m][s2] batchLn ;
+	float_al[m] lossTerms ;
+
+	Ln2(m, s2, batchSoft, batchLn) ;
+	dotProduct2(m, s2, batchLn, labels, lossTerms) ;
+	getLoss(m, lossTerms, loss) ;
+}
+int32 BATCH=256 ;
+
+def void Assign3(int32_pl s1, int32_pl s2, int32_pl s3, float_al[s1][s2] arr2, float_al[s3][s1][s2] arr1) {
+		for l = [0:s1] {
+			for j = [0:s2] {
+						arr1[s3][l][j]=arr2[l][j];
+				};
+		};
+}
+
+
+def void LSTMStep(int32_pl inputdim, int32_pl hiddendim, int32_pl dim1, int32_pl dim3, float_al[dim1][inputdim] Inputs, float_al[dim1][hiddendim] HInp, float_al[dim1][hiddendim] CellStates, float_al[inputdim][dim3] Filter, float_al[hiddendim][dim3] RecurrentFilter, float_al[dim3] Bias)
+{
+    float_al[dim1][dim3] Z1;
+    float_al[dim1][dim3] Z2;
+    float_al[dim1][dim3] Z;
+    float_al[dim1][hiddendim] O;
+	float_al[dim1][hiddendim] C;
+	float_al[dim1][hiddendim] F;
+	float_al[dim1][hiddendim] I;
+	
+	float_al[dim1][hiddendim] Term1;
+	float_al[dim1][hiddendim] Term2;
+
+	MatMul(dim1, inputdim, dim3, Inputs, Filter, Z1);
+	MatMul(dim1, hiddendim, dim3, HInp, RecurrentFilter, Z2);
+	for i=[0:dim1]
+	{
+		for j=[0:dim3]
+		{
+			Z[i][j]=Z1[i][j]+Z2[i][j];
+		};
+	};
+    GemmAdd(dim1, dim3, Z, Bias, Z);
+	
+    for i=[0:dim1]{
+        for j=[0:hiddendim]{
+            I[i][j]=Z[i][j];
+            F[i][j]=Z[i][hiddendim+j];
+            C[i][j]=Z[i][2*hiddendim+j];
+            O[i][j]=Z[i][3*hiddendim+j];
+        };
+    };
+
+    Sigmoid2(dim1, hiddendim, I, I);
+    Sigmoid2(dim1, hiddendim, F, F);
+    Tanh2(dim1, hiddendim, C, C);
+    ElemProd(dim1, hiddendim, CellStates, F, Term1);
+    ElemProd(dim1, hiddendim, I, C, Term2);
+	for i=[0:dim1]
+	{
+		for j=[0:hiddendim]
+		{
+			CellStates[i][j]=Term1[i][j]+Term2[i][j];
+		};
+	};
+    Sigmoid2(dim1, hiddendim, O, O);
+    Tanh2(dim1, hiddendim, CellStates, CellStates);
+    ElemProd(dim1, hiddendim, O, CellStates, HInp);
+}
+
+def void LSTM(int32_pl numunits, int32_pl idim, int32_pl hdim, int32_pl d1, int32_pl d3, float_al[numunits][idim] AllInputs, float_al[d1][hdim] HState, float_al[d1][hdim] CellState, float_al[idim][d3] Fil, float_al[hdim][d3] RecFil, float_al[d3] biasunit, float_al[numunits][d1][hdim] HiddenStates)
+{
+	(*remove d3 and replace it with numunits into 4*)
+	float_al[1][idim] InputExample;
+	for iter=[0:numunits]
+	{
+		for l=[0:idim]
+		{
+			InputExample[0][l]=AllInputs[iter][l];
+		};
+		Assign3(d1, hdim, iter, HState, HiddenStates);
+		LSTMStep(idim, hdim, d1, d3, InputExample, HState, CellState, Fil, RecFil, biasunit);
+	};
+}
+
+
+def void FixedAdjacencyGraph(int32_pl d1, int32_pl d2, int32_pl d3, float_al[d1][d2][d3] features, float_al[d1][d3][d2] lastnodes, float_al[d1][d2][d3] kernelarr, float_al[d3] bias, float_al[d1][d2][d3] finalarr)
+{
+	float_al[d1][d3][d2] featurest;
+	float_al[d1][d3][d2] neighbours;
+	float_al[d1][d2][d3] neighbourst;
+	float_al[d1][d2][d3] outputarr;
+	bool_bl[d1][d2][d3] ht;
+
+	Transpose(d1, d2, d3, features, featurest);
+	ElemProd3(d1, d2, d3, lastnodes, featurest, neighbours);
+	Transpose(d1, d2, d3, neighbours, neighbourst);	
+	ElemProd3(d1, d2, d3, neighbourst, kernelarr, outputarr);
+	GemmAdd3(d1, d2, d3, outputarr, bias, outputarr);
+	
+	Relu3(d1, d2, d3, outputarr, finalarr, ht);
+}
+
+
+def void forward(int32_pl d1, int32_pl d2, int32_pl d3, float_al[d1][d2][d3] features, float_al[d1][d3][d2] lastnodes, float_al[d1][d2][d3] kernelarr, float_al[d3] gcnbias, int32_pl unitstotal, int32_pl idim, int32_pl hdim, int32_pl dim1, int32_pl dim3,float_al[dim1][hdim] hstates, float_al[dim1][hdim] cellstates, float_al[idim][dim3] w1, float_al[hdim][dim3] w2, float_al[dim3] lstmbias)
+{
+		float_al[unitstotal][dim1][hdim] totalhidden;
+		float_al[d1][d2][d3] finalarr;
+		float_al[unitstotal][idim] finalarr2;
+		FixedAdjacencyGraph(d1, d2, d3, features, lastnodes, kernelarr, gcnbias, finalarr);
+		(*reshape and assign finalarr to finalarr2 before sending it to the LSTM*)
+		LSTM(unitstotal, idim, hdim, dim1, dim3, finalarr2, hstates, cellstates, w1, w2, lstmbias, totalhidden);
+		(*apply dense layer to hidden state*)
+}
+
+def void main () {
+input(CLIENT, inp, float_al[1989][12]) ;
+
+}

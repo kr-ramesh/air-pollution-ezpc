@@ -1,0 +1,699 @@
+extern float_pl intToFloat(int32_pl m) ;
+
+extern void Softmax2(int32_pl s1, int32_pl s2, float_al[s1][s2] inArr, float_al[s1][s2] outArr) ;
+
+extern void Ln(int32_pl s1, float_al[s1] inArr, float_al[s1] outArr) ;
+
+extern void getOutDer(int32_pl s1, int32_pl s2, float_al[s1][s2] batchSoft, float_al[s1][s2] lab, float_al[s1][s2] der) ;
+
+extern void MatMul(int32_pl s1, int32_pl s2, int32_pl s3, float_al[s1][s2] mat1, float_al[s2][s3] mat2, float_al[s1][s3] mat3) ;
+
+extern void GemmAdd(int32_pl s1, int32_pl s2, float_al[s1][s2] prod, float_al[s2] bias, float_al[s1][s2] out) ;
+
+extern void dotProduct2(int32_pl s1, int32_pl s2, float_al[s1][s2] arr1, float_al[s1][s2] arr2, float_al[s1] outArr) ;
+
+extern void Relu(int32_pl s1, float_al[s1] inArr, float_al[s1] outArr, bool_bl[s1] hotArr) ;
+
+extern void getBiasDer(int32_pl s1, int32_pl s2, float_al[s1][s2] der, float_al[s2] biasDer) ;
+
+extern void IfElse(int32_pl s1, float_al[s1] dat, bool_bl[s1] hot, float_al[s1] out, bool_pl flip) ;
+
+extern void updateWeights(int32_pl s, float_pl lr, float_al[s] bias, float_al[s] der) ;
+
+extern void getLoss(int32_pl m, float_al[m] lossTerms, float_al[1] loss) ;
+
+extern void computeMSELoss(int32_pl m, int32_pl s, float_al[m][s] target, float_al[m][s] fwdOut, float_al[1] loss) ;
+
+
+int32_pl totalsteps=16;
+int32_pl dim2=1989;
+int32_pl g2d3=16;
+int32_pl g1d3=12;
+float_al[totalsteps+1][d1][hdim] FullHt; 
+float_al[totalsteps][d1][hdim] FullIt; 
+float_al[totalsteps][d1][hdim] FullFt; 
+float_al[totalsteps][d1][hdim] FullGt; 
+float_al[totalsteps][d1][hdim] FullOt;
+float_al[totalsteps+1][d1][hdim] FullCt; 
+float_al[totalsteps][d1][d2] FullXt;
+
+float_al[dim2][g2d3] neight2;
+float_al[dim2][g2d3] feat2;
+float_al[g1d3][dim2] neigh1;
+float_al[dim2][g1d3] feat1;
+
+def void getSoftDer(int32_pl s1, int32_pl s2, float_al[s1][s2] batchSoft, float_al[s1][s2] lab, float_al[s1][s2] der) {
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			der[i1][i2] = batchSoft[i1][i2] - lab[i1][i2] ;
+		} ;
+	} ;
+}
+
+def void Reassign2(int32_pl s1, int32_pl s2, float_al[s1][s2] arr1, float_al[s1][s2] arr2) {
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			arr2[i1][i2] = arr1[i1][i2] ;
+		} ;
+	} ;
+}
+
+def void Transpose(int32_pl s1, int32_pl s2, int32_pl s3, float_al[s1][s2][s3] inArr, float_al[s1][s3][s2] outArr) {
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			for i3=[0:s3]
+			{
+			outArr[i1][i3][i2] = inArr[i1][i2][i3] ;
+			} ;
+		} ;
+	};
+}
+
+def void Transpose2D(int32_pl s1, int32_pl s2, float_al[s1][s2] inArr, float_al[s2][s1] outArr) {
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			outArr[i2][i1]=inArr[i1][i2];
+		} ;
+	};
+}
+
+def void Relu3(int32_pl s1, int32_pl s2, int32_pl s3, float_al[s1][s2][s3] inArr, float_al[s1][s2][s3] outArr, bool_bl[s1][s2][s3] hotArr) {
+	int32_pl sz = s1*s2*s3 ;
+	
+	bool_bl[sz] hotFlat;
+	float_al[sz] inFlat ;
+	float_al[sz] outFlat ;
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			for i3=[0:s3]{
+				inFlat[i1*s2*s3 + i2*s3+ i3] = inArr[i1][i2][i3] ;
+				hotFlat[i1*s2*s3 + i2*s3+ i3] = hotArr[i1][i2][i3] ;
+			} ;
+		} ;
+	} ;
+
+	Relu(sz, inFlat, outFlat, hotFlat) ;
+	
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			for i3=[0:s3]{
+				outArr[i1][i2][i3]= outFlat[i1*s2*s3 + i2*s3+ i3] ;
+			} ;
+		} ;
+	} ;
+}
+
+def void GemmAdd3(int32_pl s1, int32_pl s2, int32_pl s3, float_al[s1][s2][s3] prod, float_al[s3] bias, float_al[s1][s2][s3] out)
+{
+	for i1=[0:s1]
+	{
+		for i2=[0:s2]
+		{
+			for i3=[0:s3]
+			{
+				out[i1][i2][i3]=prod[i1][i2][i3]+bias[i2];
+			};
+		};
+	};
+}
+
+def void SubtractOne(int32_pl s1, int32_pl s2, float_al[s1][s2] inp)
+{
+	for i1=[0:s1]
+	{
+		for i2=[0:s2]
+		{
+			inp[i1][i2]=1-inp[i1][i2];
+		};
+	};
+}
+
+
+def void Ln2(int32_pl s1, int32_pl s2, float_al[s1][s2] inArr, float_al[s1][s2] outArr) {
+	int32_pl sz = s1*s2 ;
+
+	float_al[sz] inFlat ;
+	float_al[sz] outFlat ;
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			inFlat[i1*s2 + i2] = inArr[i1][i2] ;
+		} ;
+	} ;
+
+	Ln(sz, inFlat, outFlat) ;
+
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			outArr[i1][i2] = outFlat[i1*s2 + i2] ;
+		} ;
+	} ;
+}
+
+def void Relu2(int32_pl s1, int32_pl s2, float_al[s1][s2] inArr, float_al[s1][s2] outArr, bool_bl[s1][s2] hotArr) {
+	int32_pl sz = s1*s2 ;
+
+	float_al[sz] inArrFlat ;
+	float_al[sz] outArrFlat ;
+	bool_bl[sz] hotArrFlat ;
+
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			inArrFlat[i1*s2 + i2] = inArr[i1][i2] ;  
+		} ;
+	} ;
+
+	Relu(sz, inArrFlat, outArrFlat, hotArrFlat) ;
+
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			outArr[i1][i2] = outArrFlat[i1*s2 + i2] ;
+			hotArr[i1][i2] = hotArrFlat[i1*s2 + i2] ;
+		} ;
+	} ;
+}
+
+def void updateWeights2(int32_pl s1, int32_pl s2, float_pl lr, float_al[s1][s2] weight, float_al[s1][s2] der) {
+	int32_pl sz = s1*s2 ;
+
+	float_al[sz] weightFlat ;
+	float_al[sz] derFlat ;
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			weightFlat[i1*s2 + i2] = weight[i1][i2] ;
+			derFlat[i1*s2 + i2] = der[i1][i2] ;
+		} ; 
+	} ;
+
+	updateWeights(sz, lr, weightFlat, derFlat) ;
+
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			weight[i1][i2] = weightFlat[i1*s2 + i2] ;
+		} ; 
+	} ;
+}
+
+def void IfElse2(int32_pl s1, int32_pl s2, float_al[s1][s2] dat, bool_bl[s1][s2] hot, float_al[s1][s2] out, bool_pl flip) {
+	int32_pl sz = s1*s2 ;
+
+	float_al[sz] datFlat ;
+	bool_bl[sz] hotFlat ;
+	float_al[sz] outFlat ;
+
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			datFlat[i1*s2 + i2] = dat[i1][i2] ;
+			hotFlat[i1*s2 + i2] = hot[i1][i2] ;
+		} ;
+	} ;
+
+	IfElse(sz, datFlat, hotFlat, outFlat, flip) ;
+
+	for i1=[0:s1] {
+		for i2=[0:s2] {
+			out[i1][i2] = outFlat[i1*s2 + i2] ;
+		} ; 
+	} ;
+}
+
+def void Sigmoid2(int32_pl s1, int32_pl s2, float_al[s1][s2] inArr, float_al[s1][s2] outArr)
+{
+
+}
+
+def void Tanh2(int32_pl s1, int32_pl s2, float_al[s1][s2] inArr, float_al[s1][s2] outArr)
+{
+
+}
+
+def void ElemProd(int32_pl s1, int32_pl s2, float_al[s1][s2] arr1, float_al[s1][s2] arr2, float_al[s1][s2] outArr)
+{
+		for i1=[0:s1] {
+			for i2=[0:s2] 
+			{
+			outArr[i1][i2] = arr1[i1][i2]*arr2[i1][i2];
+			}; 
+		};
+}
+
+def void ElemProd3(int32_pl s1, int32_pl s2, int32_pl s3, float_al[s1][s2][s3] arr1, float_al[s1][s2][s3] arr2, float_al[s1][s2][s3] outArr)
+{
+		for i1=[0:s1]
+		{
+			for i2=[0:s2] 
+			{
+				for i3=[0:s3] {
+					outArr[i1][i2][i3] = arr1[i1][i2][i3]*arr2[i1][i2][i3];
+			}; 
+		};
+	};
+}
+
+def void computeCELoss(int32_pl m, int32_pl s2, float_al[m][s2] labels, float_al[m][s2] batchSoft, float_al[1] loss) {
+	float_al[m][s2] batchLn ;
+	float_al[m] lossTerms ;
+
+	Ln2(m, s2, batchSoft, batchLn) ;
+	dotProduct2(m, s2, batchLn, labels, lossTerms) ;
+	getLoss(m, lossTerms, loss) ;
+}
+
+def void Assign3(int32_pl s1, int32_pl s2, int32_pl s3, float_al[s1][s2] arr2, float_al[s3][s1][s2] arr1) {
+		for l = [0:s1] {
+			for j = [0:s2] {
+						arr1[s3][l][j]=arr2[l][j];
+				};
+		};
+}
+
+
+def void AssignInputs(int32_pl s1, int32_pl s2, int32_pl s3, float_al[s1][s2] arr1, float_al[s2][s3] arr2) {
+			for j = [0:s2] {
+						arr2[j][s3]=arr1[0][j];
+				};
+}
+
+def void ReverseAssign3(int32_pl s1, int32_pl s2, int32_pl s3, float_al[s3][s1][s2] arr1, float_al[s1][s2] arr2) {
+		for l = [0:s1] {
+			for j = [0:s2] {
+						arr2[l][j]=arr1[s3][l][j];
+				};
+		};
+}
+
+def void MatMul3(int32_pl d1, int32_pl d2, int32_pl d3, int32_pl d4, float_al[d1][d2][d3] arr1, float_al[d1][d3][d4] arr2, float_al[d1][d2][d4] arr3)
+{
+	float_al[d2][d3] a1;
+	float_al[d3][d4] a2;
+	float_al[d2][d4] a3;
+	for i0=[0:d1]
+	{
+		ReverseAssign3(d2, d3, i0, arr1, a1);
+		ReverseAssign3(d3, d4, i0, arr2, a2);
+		MatMul(d2, d3, d4, a1, a2, a3);
+		Assign3(d2, d4, i0, a3, arr3);
+	};
+}
+
+def void ReluCheck(int32_pl d1, int32_pl d2, int32_pl d3, float_al[d1][d2][d3] arr1, bool_bl[d1][d2][d3] arr2)
+{
+
+}
+
+def void ReluDerivative(int32_pl d1, int32_pl d2, float_al[d1][d2] arr1, float_al[d1][d2] arr2)
+{
+
+}
+
+def void SubtractOne(int32_pl d1, int32_pl d2, float_al[d1][d2] arr1, float_al[d1][d2] arr2)
+{
+	for j=[0:d1]
+	{
+		for k=[0:d2]
+		{
+			arr2[j][k]=1-arr1[j][k];
+		};
+	};
+}
+
+def void Additive2D(int32_pl d1, int32_pl d2, float_al[d1][d2] arr1, float_al[d1][d2] arr2, float_al[d1][d2] arr3)
+{
+	for j=[0:d1]
+	{
+		for k=[0:d2]
+		{
+			arr3[j][k]=arr2[j][k]+arr1[j][k];
+		};
+	};
+}
+
+def void Additive2DBias(int32_pl d1, int32_pl d2, float_al[d1][d2] arr1, float_al[d2] arr2)
+{
+	for j=[0:d1]
+	{
+		for k=[0:d2]
+		{
+			arr2[k]=arr2[k]+arr1[j][k];
+		};
+	};
+}
+
+def void SumBias(int32_pl d1, int32_pl d2, float_al[d1][d2] arr1, float_al[d1] arr2)
+{
+	for j=[0:d1]
+	{
+		for k=[0:d2]
+		{
+			arr2[j]=arr2[j]+arr1[j][k];
+		};
+	};
+}
+
+
+def void AssignGates(int32_pl d1, int32_pl d2, int32_pl d3, float_al[d1][d2] arr1, float_al[d1][d2] arr2, float_al[d1][d2] arr3, float_al[d1][d2] arr4, float_al[d1][d3] arr5)
+{
+	for j=[0:d1]
+	{
+		for k=[0:d2]
+		{
+			arr5[j][k]=arr1[j][k];
+			arr5[j][d2+k]=arr2[j][k];
+			arr5[j][2*d2+k]=arr3[j][k];
+			arr5[j][3*d2+k]=arr4[j][k];
+		};
+	};
+}
+
+
+def void FixedAdjacencyGraph(int32_pl d1, int32_pl d2, int32_pl d3, int32_pl d4, float_al[d1][d2][d3] features, float_al[d1][d2][d2] lastnodes, float_al[d1][d3][d4] kernelarr, float_al[d2] bias, float_al[d1][d2][d4] finalarr, float_al[d1][d3][d2] neighbours)
+{
+	float_al[d1][d3][d2] featurest;
+	float_al[d1][d2][d3] neighbourst;
+	float_al[d1][d2][d4] outputarr;
+	bool_bl[d1][d2][d4] ht;
+
+	Transpose(d1, d2, d3, features, featurest);
+	MatMul3(d1, d3, d2, d2, featurest, lastnodes, neighbours);
+	Transpose(d1, d3, d2, neighbours, neighbourst);
+	MatMul3(d1, d2, d3, d4, neighbourst, kernelarr, outputarr);
+	GemmAdd3(d1, d2, d4, outputarr, bias, outputarr);
+
+	(*Note, EzPC does not allowing FP comparisons*)
+
+	ReluCheck(d1, d2, d4, outputarr, ht);
+    
+	Relu3(d1, d2, d4, outputarr, finalarr, ht);
+}
+
+
+def void LSTMStep(int32_pl t, int32_pl inputdim, int32_pl hiddendim, int32_pl dim1, int32_pl dim3, float_al[dim1][inputdim] Inputs, float_al[dim1][hiddendim] HInp, float_al[dim1][hiddendim] CellStates, float_al[inputdim][dim3] Filter, float_al[hiddendim][dim3] RecurrentFilter, float_al[dim3] Bias)
+{
+    float_al[dim1][dim3] Z1;
+    float_al[dim1][dim3] Z2;
+    float_al[dim1][dim3] Z;
+    float_al[dim1][hiddendim] O;
+	float_al[dim1][hiddendim] C;
+	float_al[dim1][hiddendim] F;
+	float_al[dim1][hiddendim] I;
+	
+	float_al[dim1][hiddendim] Term1;
+	float_al[dim1][hiddendim] Term2;
+	float_al[dim1][hiddendim] CellStates2;
+	
+	Assign3(dim1, hiddendim, t, HInp, FullHt);
+
+	MatMul(dim1, inputdim, dim3, Inputs, Filter, Z1);
+	MatMul(dim1, hiddendim, dim3, HInp, RecurrentFilter, Z2);
+	for i=[0:dim1]
+	{
+		for j=[0:dim3]
+		{
+			Z[i][j]=Z1[i][j]+Z2[i][j];
+		};
+	};
+
+    GemmAdd(dim1, dim3, Z, Bias, Z);
+	
+    for i=[0:dim1]{
+        for j=[0:hiddendim]{
+            I[i][j]=Z[i][j];
+            F[i][j]=Z[i][hiddendim+j];
+            C[i][j]=Z[i][2*hiddendim+j];
+            O[i][j]=Z[i][3*hiddendim+j];
+        };
+    };
+
+    Sigmoid2(dim1, hiddendim, I, I);
+    Sigmoid2(dim1, hiddendim, F, F);
+    Tanh2(dim1, hiddendim, C, C);
+    ElemProd(dim1, hiddendim, CellStates, F, Term1);
+    ElemProd(dim1, hiddendim, I, C, Term2);
+	for i=[0:dim1]
+	{
+		for j=[0:hiddendim]
+		{
+			CellStates[i][j]=Term1[i][j]+Term2[i][j];
+		};
+	};
+    Sigmoid2(dim1, hiddendim, O, O);
+    Tanh2(dim1, hiddendim, CellStates, CellStates2);
+    ElemProd(dim1, hiddendim, O, CellStates2, HInp);
+
+	Assign3(dim1, inputdim, t, Inputs, FullXt);
+	Assign3(dim1, hiddendim, t, O, FullOt);
+	Assign3(dim1, hiddendim, t, F, FullFt);
+	Assign3(dim1, hiddendim, t, I, FullIt);
+	Assign3(dim1, hiddendim, t, C, FullGt);
+	Assign3(dim1, hiddendim, t+1, CellStates, FullCt);
+}
+
+def void LSTM(int32_pl numunits, int32_pl idim, int32_pl hdim, int32_pl d1, int32_pl d3, float_al[d1][numunits][idim] AllInputs, float_al[d1][hdim] HState, float_al[d1][hdim] CellState, float_al[idim][d3] Fil, float_al[hdim][d3] RecFil, float_al[d3] biasunit)
+{
+	float_al[1][idim] InputExample;
+
+	for iter=[0:numunits]
+	{
+		for l=[0:idim]
+		{
+			InputExample[0][l]=AllInputs[0][iter][l];
+		};
+		LSTMStep(iter, idim, hdim, d1, d3, InputExample, HState, CellState, Fil, RecFil, biasunit);
+	};
+
+}
+
+
+def void forward(int32_pl d1, int32_pl d2, int32_pl d3, int32_pl d4, float_al[d1][d2][d3] features, float_al[d1][d2][d2] lastnodes, float_al[d1][d2][d4] kernelarr, float_al[d2] gcnbias, float_al[d1][d2][d2] lastnodes2, float_al[d1][d4][d4] kernelarr2, float_al[d2] gcnbias2, int32_pl unitstotal, int32_pl idim, int32_pl hdim, int32_pl dim1, int32_pl dim3, float_al[dim1][hdim] hstates, float_al[dim1][hdim] cellstates, float_al[idim][dim3] lstmkernel, float_al[hdim][dim3] reclstmkernel, float_al[dim3] lstmbias, float_al[hdim][d2] denselayer, float_al[d2] bias4)
+{
+		float_al[unitstotal][dim1][hdim] totalhidden;
+		float_al[d1][d2][d4] finalarr;
+		float_al[d1][d2][d4] finalarr2;
+		float_al[d1][d4][d2] finalarr3;
+		float_al[dim1][d2] finaloutput;
+		float_al[d1][d3][d2] neighbours;
+		float_al[d1][d4][d2] neighbours2;
+		float_al[d1][d2][d4] neighbourst2;
+		
+		FixedAdjacencyGraph(d1, d2, d3, d4, features, lastnodes, kernelarr, gcnbias, finalarr, neighbours);
+		ReverseAssign3(dim2, g1d3, 0, features, feat1);
+		ReverseAssign3(g1d3, dim2, 0, neighbours, neigh1);
+
+		FixedAdjacencyGraph(d1, d2, d4, d4, finalarr, lastnodes2, kernelarr2, gcnbias2, finalarr2, neighbours2);
+		Tranpose(d1, g2d3, dim2, neighbours2, neighbourst2);
+		ReverseAssign3(dim2, g2d3, 0, neighbourst2, neight2);
+		ReverseAssign3(dim2, g2d3, 0, finalarr, feat2);
+		
+		Transpose(d1, d2, d4, finalarr2, finalarr3);
+		Assign3(d1, hdim, 0, cellstates, FullCt);
+		LSTM(unitstotal, idim, hdim, dim1, dim3, finalarr3, hstates, cellstates, lstmkernel, reclstmkernel, lstmbias);
+		Assign3(d1, hdim, timesteps, hstates, FullHt);
+
+		MatMul(dim1, hdim, d2, hstates, denselayer, finaloutput);
+		GemmAdd(dim1, d2, finaloutput, bias4, finaloutput);
+		Sigmoid2(dim1, d2, finaloutput, finaloutput);
+}
+
+
+def void backward(int32_pl d1, int32_pl d2, int32_pl gcn1dim3, int32_pl gcn2dim3, int32_pl idim, int32_pl hdim, int32_pl hdim4, int32_pl totaltimesteps, float_al[hdim][d2] layer1W, float_al[d2] layer1b, float_al[totaltimesteps+1][d1][hdim] hiddenstates, float_al[totaltimesteps][d1][hdim] TotalIt, float_al[totaltimesteps][d1][hdim] TotalFt, float_al[totaltimesteps][d1][hdim] TotalGt, float_al[totaltimesteps][d1][hdim] TotalOt, float_al[totaltimesteps][d1][hdim] TotalCt, float_al[totaltimesteps][d1][d2] TotalXt, float_al[d1][d2] batchSoft, float_al[d1][d2] lab. float_al[d2][hdim4] Fil, float_al[hdim][hdim4] RecFil, float_al[hdim4] LSTMBias, float_al[d2][gcn2dim3] neighbourst2, float_al[gcn2dim3][totaltimesteps] kernelarr2, float_al[d2][gcn2dim3] features2, float_al[d2][d2] lastnodes2, float_al[gcn1dim3][d2] neighbours1, float_al[gcn1dim3][gcn2dim3] kernelarr, float_al[d2][gcn1dim3] features1, float_al[d2][d2] lastnodes, float_al[d2] bias1, float_al[d2] bias2)
+{
+    float_al[d1][d2] layer1Der ;
+	float_al[d1][hdim] dh;
+	float_al[d2][hdim] layer1WTranspose;
+    float_al[hdim][d1] layer1InReshaped ;
+    float_al[d2][hdim] layer1WDerReshaped ;
+	float_al[hdim][d2] layer1WDer ; 
+	float_al[d1][hdim] layerFinalHidden;
+	float_al[d1][hdim] hiddenT;
+    float_al[d2] layer1bDer ;
+	float_al[d2][totaltimesteps] DX;
+
+	float_al[d2][hdim4] DFilSum;
+	float_al[hdim][hdim4] DRecFilSum;
+	float_al[hdim4] DBiasSum;
+	float_al[d2] dbias1;
+	float_al[d2] dbias2;
+
+	ReverseAssign3(d1, hdim, totaltimesteps, hiddenstates, layerFinalHidden);
+    getSoftDer(d1, d2, batchSoft, lab, layer1Der) ;
+
+    Transpose2D(d1, hdim, layerFinalHidden, layer1InReshaped) ;
+	(*Dense layer derivative in layer1WDerReshaped*)
+    MatMul(hdim, d1, d2, layer1InReshaped, layer1Der, layer1WDerReshaped) ;
+	(*Tranpose to use it for weight update*)
+    Transpose2D(d2, hdim, layer1WDerReshaped, layer1WDer) ;
+
+	Transpose2D(hdim, d2, layer1W, layer1WTranspose) ;
+	(*DHt*)
+	MatMul(d1, d2, hdim, layer1Der, layer1WTranspose, dh) ;
+
+	(*Derivative of the dense layer bias*)
+    getBiasDer(d1, d2, layer1Der, layer1bDer) ;
+
+	float_al[d1][hdim] dNextC;
+	for t=[0:totaltimesteps]
+	{	
+		float_al[d1][hdim] temp;
+		float_al[d1][hdim] Ot;
+		float_al[d1][hdim] It;
+		float_al[d1][hdim] Ft;
+		float_al[d1][hdim] Gt;
+		float_al[d1][hdim] Ct;
+		float_al[d1][hdim] Xt;
+		float_al[d1][hdim] PrevC;
+		float_al[d1][hdim] NextF;
+		float_al[d1][hdim] DGates;
+		float_al[hdim4][d2] FilTranspose;
+		float_al[hdim4][hdim] RecFilTranspose;
+		float_al[d2][d1] XtTranspose;
+		float_al[hdim][d1] hiddenTTranspose;
+		float_al[d1][d2] dXt;
+		float_al[d2][hdim4] DFil;
+		float_al[hdim][hdim4] DRecFil;
+
+		(*total timesteps should be h+1*)
+		ReverseAssign3(d1, hdim, totaltimesteps-t-1, hiddenstates, hiddenT);
+
+		(*Initialize all variables*)
+		ReverseAssign3(d1, hdim, totaltimesteps-t-1, TotalOt, Ot);
+		ReverseAssign3(d1, hdim, totaltimesteps-t-1, TotalIt, It);
+		ReverseAssign3(d1, hdim, totaltimesteps-t-1, TotalFt, Ft);
+		ReverseAssign3(d1, hdim, totaltimesteps-t-1, TotalGt, Gt);
+		ReverseAssign3(d1, hdim, totaltimesteps-t-1, TotalCt, Ct);
+		
+		(*Insert conditional statements here*)
+		ReverseAssign3(d1, hdim, totaltimesteps-t-2, TotalCt, PrevC);
+		ReverseAssign3(d1, hdim, totaltimesteps-t, TotalFt, NextF);
+		ReverseAssign3(d1, d2, totaltimesteps-t, TotalXt, Xt);
+		
+		ElemProd(d1, hdim, dh, Ot, Ot);
+		Reassign2(d1, hdim, Ot, DOt);
+		Tanh2(d1, hdim, Ct, Ct);
+		ElemProd(d1, hdim, Ct, Ct, temp);
+		SubtractOne(d1, hdim, temp, temp);
+		ElemProd(d1, hdim, Ot, temp, DCt);
+		ElemProd(d1, hdim, dNextC, NextF, temp);
+		Additive2D(d1, hdim, temp, DCt, DCt);
+		for i1=[0:d1]
+		{
+			for i2[0:hdim]
+			{
+				dNextC[i1][i2]=DCt[i1][i2];
+			};
+		};
+
+		ElemProd(d1, hdim, DCt, It, DGt);
+		ElemProd(d1, hdim, DGt, Gt, DIt);
+
+		ElemProd(d1, hdim, Gt, Gt, temp);
+		SubtractOne(d1, hdim, temp, temp);
+
+		ElemProd(d1, hdim, DGt, temp, DGt);
+		
+		SubtractOne(d1, hdim, It, temp);
+		ElemProd(d1, hdim, DIt, temp, DIt);
+
+		ElemProd(d1, hdim, DCt, PrevC, DFt);
+		ElemProd(d1, hdim, DFt, Ft, DFt);
+		SubtractOne(d1, hdim, Ft, temp);
+		ElemProd(d1, hdim, DFt, temp, DFt);
+
+		SubtractOne(d1, hdim, Ot, temp);
+		ElemProd(d1, hdim, DOt, temp, DOt);
+		ElemProd(d1, hdim, DOt, Ct, DOt);
+
+		AssignGates(d1, hdim, hdim*4, DIt, DFt, DGt, DOt, DGates);
+
+		Transpose2D(d2, hdim4, Fil, FilTranspose);
+		Transpose2D(hdim, hdim4, RecFil, RecFilTranspose);
+		MatMul(d1, hdim4, d2, DGates, FilTranspose, dXt);
+		MatMul(d1, hdim4, hdim, DGates, RecFilTranspose, dh);
+
+		Transpose2D(d1, d2, Xt, XtTranspose);
+		Transpose(d1, hdim, hiddenT, hiddenTTranspose);
+		MatMul(d2, d1, hdim4, XtTranspose, DGates, DFil);
+		MatMul(hdim, d1, hdim4, hiddenTTranspose, DGates, DRecFil);
+
+		(*Calculate dRecFil and dFil and add it to something along with dbias which represents the biases*)
+
+		Additive2D(d2, hdim4, DFil, DFilSum, DFilSum);
+		Additive2D(hdim, hdim4, DRecFil, DRecFilSum, DRecFilSum);
+		Additive2DBias(d1, hdim4, DGates, DBiasSum);
+
+		(*Accumulate all the derivates with respect to X for the FixedAdjacencyGraph*)
+		(*Change this to drop the first dimension*)
+		AssignInputs(d1, d2, totaltimesteps-t-1, dXt, DX);
+	};
+
+	(*Edit the LSTM code to get all the hidden states and current states++) and send them to the backward pass*)
+	(*Could be mistakes made while calculating transpose*)
+
+	float_al[totaltimesteps][gcn2dim3] dkernelarr2;
+	float_al[gcn1dim3]][gcn2dim3] dkernelarr;
+	float_al[totaltimesteps][d2] DXTranspose;
+	float_al[gcn2dim3][d2] dneighbours2;
+	float_al[gcn1dim3][d2] dneighbours1;
+	float_al[d2][d2] dLastnodes2;
+	float_al[d2][d2] dLastnodes1;
+	float_al[gcn2dim3][d2] dfeatures2t;
+	float_al[d2][gcn2dim3] dfeatures2;
+
+
+
+    (*Derivative of recurrentfilter multiplied by previous FixedAdjacencyGraph*)
+	ReluDerivative(d2, totaltimesteps, DX, DX);
+	Transpose2D(d2, totaltimesteps, DX, DXTranspose);
+	MatMul3(totaltimesteps, d2, gcn2dim3, DXTranspose, neighbourst2, dkernelarr2);
+	SumBias(d2, totaltimesteps, DX, dbias1);
+		
+	MatMul(gcn2dim3, totaltimesteps, d2, kernelarr2, DXTranspose, dneighbours2);
+	MatMul(d2, gcn2dim3, d2, features2, dneighbours2, dLastnodes2);
+	MatMul(gcn2dim3, d2, d2, dneighbours2, lastnodes2, dfeatures2t);
+
+	(*For the bias, use initial relu derivate*)
+    (*Derivative of recurrentfilter multiplied by previous FixedAdjacencyGraph derivative and then once again the FixedAdjacencyGraph*)
+	ReluDerivative(gcn2dim3, d2, dfeatures2t, dfeatures2t);
+	SumBias(d2, gcn2dim3, dfeatures2t, dbias2);
+
+	Transpose2D(gcn2dim3, d2, dfeatures2t, dfeatures2);
+	MatMul(gcn1dim3, d2, gcn2dim3, neighbours1, dfeatures2, dkernelarr);
+	MatMul(gcn1dim3, gcn2dim3, d2, kernelarr, dfeatures2t, dneighbours1);
+	MatMul(d2, gcn1dim3, d2 ,features1, dneighbours1, dLastnodes1);
+
+	updateWeightsW(gcn1dim3, gcn2dim3, 0.01, kernelarr, dkernelarr);
+	updateWeightsW(totaltimesteps, 0.01, gcn2dim3, kernelarr2, dkernelarr2);
+	updateWeightsW(d2, d2, 0.01, dLastnodes1, lastnodes);
+	updateWeightsW(d2, d2, 0.01, dLastnodes2, lastnodes2);
+	updateWeightsB(d2, 0.01, dbias1, bias1);
+	updateWeightsB(d2, 0.01, dbias2, bias2);
+
+	updateWeightsW(d2, hdim4, 0.01, Fil, DFilSum);
+	updateWeightsW(hdim, hdim4, 0.01, RecFil, DRecFilSum);
+	updateWeightsB(d2, 0.01, LSTMBias, DBiasSum);
+    updateWeightsW(hdim, d2, 0.01, layer1W, layer1WDer) ;
+    updateWeightsb(d2, 0.01, layer1b, layer1bDer) ;
+}
+
+def void main () {
+
+input(CLIENT, inp, float_al[1][1989][12]) ;
+
+input(SERVER, A1, float_al[1][1989][1989]) ;
+input(SERVER, kernel1, float_al[1][12][16]) ;
+input(SERVER, bias1, float_al[1989]) ;
+
+input(SERVER, A2, float_al[1][1989][1989]) ;
+input(SERVER, kernel2, float_al[1][16][16]) ;
+input(SERVER, bias2, float_al[1989]) ;
+
+input(SERVER, hidden, float_al[1][16]) ;
+input(SERVER, cell, float_al[1][16]) ;
+
+input(SERVER, k, float_al[1989][64]) ;
+input(SERVER, reck, float_al[16][64]) ;
+input(SERVER, lstmbias, float_al[64]) ;
+
+input(SERVER, dense, float_al[16][1989]) ;
+input(SERVER, bias4, float_al[1989]) ;
+
+
+}
