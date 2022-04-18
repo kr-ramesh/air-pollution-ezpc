@@ -18,8 +18,6 @@ auto inner = make_vector<T>(sizes...) ;
 return vector<decltype(inner)>(first, inner) ;
 }
 
-
-
 extern float intToFloat(int32_t m);
 extern void Softmax2(int32_t s1, int32_t s2, auto& inArr, auto& outArr);
 extern void Ln(int32_t s1, auto& inArr, auto& outArr);
@@ -144,62 +142,32 @@ outArr[i2][i1] = inArr[i1][i2] ;
 }
 }
 
-void Relu3(int32_t s1, int32_t s2, int32_t s3, auto& inArr, auto& outArr, auto& hotArr){
-int32_t __tac_var3 = (s1 * s2) ;
+void Relu3(int32_t s1, int32_t s2, int32_t s3, auto& inArr, auto& outArr, auto& hotArr) {
 
-int32_t sz = (__tac_var3 * s3) ;
+int32_t sz = (s1 * s2 * s3) ;
 
 auto hotFlat = make_vector<bool>(sz) ;
-
 auto inFlat = make_vector<float>(sz) ;
-
 auto outFlat = make_vector<float>(sz) ;
 
-for (uint32_t i1 = 0; i1 < s1; i1++){
-for (uint32_t i2 = 0; i2 < s2; i2++){
-for (uint32_t i3 = 0; i3 < s3; i3++){
-int32_t __tac_var4 = (i1 * s2) ;
+for (uint32_t i1 = 0; i1 < s1; i1++) {
+for (uint32_t i2 = 0; i2 < s2; i2++) {
+for (uint32_t i3 = 0; i3 < s3; i3++) {
 
-int32_t __tac_var5 = (__tac_var4 * s3) ;
-
-int32_t __tac_var6 = (__tac_var5 + i2) ;
-
-int32_t __tac_var7 = (__tac_var6 * s3) ;
-
-int32_t __tac_var8 = (__tac_var7 + i3) ;
-
-inFlat[__tac_var8] = inArr[i1][i2][i3] ;
-
-int32_t __tac_var9 = __tac_var4 ;
-
-int32_t __tac_var10 = __tac_var5 ;
-
-int32_t __tac_var11 = __tac_var6 ;
-
-int32_t __tac_var12 = __tac_var7 ;
-
-int32_t __tac_var13 = __tac_var8 ;
-
-hotFlat[__tac_var13] = hotArr[i1][i2][i3] ;
+inFlat[i1*s2*s3 + i2*s3 + i3] = inArr[i1][i2][i3] ;
 
 }
 }
 }
+
 Relu(sz, inFlat, outFlat, hotFlat);
+
 for (uint32_t i1 = 0; i1 < s1; i1++){
 for (uint32_t i2 = 0; i2 < s2; i2++){
 for (uint32_t i3 = 0; i3 < s3; i3++){
-int32_t __tac_var14 = (i1 * s2) ;
 
-int32_t __tac_var15 = (__tac_var14 * s3) ;
-
-int32_t __tac_var16 = (__tac_var15 + i2) ;
-
-int32_t __tac_var17 = (__tac_var16 * s3) ;
-
-int32_t __tac_var18 = (__tac_var17 + i3) ;
-
-outArr[i1][i2][i3] = outFlat[__tac_var18] ;
+outArr[i1][i2][i3] = outFlat[i1*s2*s3 + i2*s3 + i3] ;
+hotArr[i1][i2][i3] = hotFlat[i1*s2*s3 + i2*s3 + i3] ;
 
 }
 }
@@ -371,6 +339,7 @@ outArr[i1][i2]=(t1-t2)/(t2+t1);
 }
 }
 }
+
 //ElemWiseMul
 void ElemProd(int32_t s1, int32_t s2, auto& arr1, auto& arr2, auto& outArr){
 for (uint32_t i1 = 0; i1 < s1; i1++){
@@ -477,19 +446,6 @@ void ReluCheck(int32_t d1, int32_t d2, int32_t d3, auto& arr1, auto& arr2, auto&
             }
 }
 
-void ReluDerivative(int32_t d1, int32_t d2, auto& arr1, auto& arr2){
-        for (uint32_t i0 = 0; i0 < d1; i0++){
-        for (uint32_t i1 = 0; i1 < d2; i1++){
-            float n=0;
-            if(arr1[i0][i1]>0)
-            n=1;
-            else
-            n=0;
-            arr2[i0][i1]=arr1[i0][i1]*n;
-        }
-    }
-}
-
 //ElemWiseAdd
 void Additive2D(int32_t d1, int32_t d2, auto& arr1, auto& arr2, auto& arr3){
 for (uint32_t j = 0; j < d1; j++){
@@ -559,11 +515,8 @@ arr5[j][__tac_var59] = arr4[j][k] ;
 
 void FixedAdjacencyGraph(int32_t d1, int32_t d2, int32_t d3, int32_t d4, auto& features, auto& lastnodes, auto& kernelarr, auto& bias, auto& finalarr, auto& neighbours, auto& reluoutputs){
 auto featurest = make_vector<float>(d1, d3, d2) ;
-
 auto neighbourst = make_vector<float>(d1, d2, d3) ;
-
 auto outputarr = make_vector<float>(d1, d2, d4) ;
-
 auto ht = make_vector<bool>(d1, d2, d4) ;
 
 Transpose(d1, d2, d3, features, featurest);
@@ -576,38 +529,28 @@ Relu3(d1, d2, d4, outputarr, finalarr, ht);
 }
 
 void LSTMStep(int32_t t, int32_t inputdim, int32_t hiddendim, int32_t dim1, int32_t dim3, auto& Inputs, auto& HInp, auto& CellStates, auto& Filter, auto& RecurrentFilter, auto& Bias, auto& FullHt, auto& FullIt, auto& FullFt, auto& FullGt, auto& FullOt, auto& FullCt, auto& FullXt){
+
 auto Z1 = make_vector<float>(dim1, dim3) ;
-
 auto Z2 = make_vector<float>(dim1, dim3) ;
-
 auto Z = make_vector<float>(dim1, dim3) ;
-
 auto O = make_vector<float>(dim1, hiddendim) ;
-
 auto C = make_vector<float>(dim1, hiddendim) ;
-
 auto F = make_vector<float>(dim1, hiddendim) ;
-
 auto I = make_vector<float>(dim1, hiddendim) ;
-
 auto Term1 = make_vector<float>(dim1, hiddendim) ;
-
 auto Term2 = make_vector<float>(dim1, hiddendim) ;
-
 auto CellStates2 = make_vector<float>(dim1, hiddendim) ;
 
 Assign3(dim1, hiddendim, t, HInp, FullHt);
 Assign3(dim1, inputdim, t, Inputs, FullXt);
 MatMul(dim1, inputdim, dim3, Inputs, Filter, Z1);
 MatMul(dim1, hiddendim, dim3, HInp, RecurrentFilter, Z2);
-for (uint32_t i = 0; i < dim1; i++){
-for (uint32_t j = 0; j < dim3; j++){
-float __tac_var60 = Z1[i][j] ;
 
-float __tac_var61 = Z2[i][j] ;
-
-Z[i][j] = (__tac_var60 + __tac_var61) ;
-
+for (uint32_t i = 0; i < dim1; i++) {
+for (uint32_t j = 0; j < dim3; j++) {
+    float __tac_var60 = Z1[i][j] ;
+    float __tac_var61 = Z2[i][j] ;
+    Z[i][j] = (__tac_var60 + __tac_var61) ;
 }
 }
 GemmAdd(dim1, dim3, Z, Bias, Z);
@@ -664,7 +607,6 @@ Assign3(dim1, hiddendim, __tac_var69, CellStates, FullCt);
 
 void LSTM3D(int32_t numunits, int32_t idim, int32_t hdim, int32_t d1, int32_t d3, auto& AllInputs, auto& HState, auto& CellState, auto& Fil, auto& RecFil, auto& biasunit, auto& FullHt, auto& FullIt, auto& FullFt, auto& FullGt, auto& FullOt, auto& FullCt, auto& FullXt){
 auto InputExample = make_vector<float>(1, idim) ;
-
 for (uint32_t iter = 0; iter < numunits; iter++){
 for (uint32_t l = 0; l < idim; l++){
 InputExample[0][l] = AllInputs[0][iter][l] ;
@@ -674,18 +616,13 @@ LSTMStep(iter, idim, hdim, d1, d3, InputExample, HState, CellState, Fil, RecFil,
 }
 
 void forward(int32_t d1, int32_t d2, int32_t d3, int32_t d4, auto& features, auto& lastnodes, auto& kernelarr, auto& gcnbias, auto& lastnodes2, auto& kernelarr2, auto& gcnbias2, int32_t unitstotal, int32_t idim, int32_t hdim, int32_t dim1, int32_t dim3, auto& hstates, auto& cellstates, auto& lstmkernel, auto& reclstmkernel, auto& lstmbias, auto& denselayer, auto& bias4, auto& FullHt, auto& FullIt, auto& FullFt, auto& FullGt, auto& FullOt, auto& FullCt, auto& FullXt, auto& neight2, auto& feat2, auto& neigh1, auto& feat1, auto& reluoutputs1, auto& reluoutputs2, auto& finaloutput){
+
 auto totalhidden = make_vector<float>(unitstotal, dim1, hdim) ;
-
 auto finalarr = make_vector<float>(d1, d2, d4) ;
-
 auto finalarr2 = make_vector<float>(d1, d2, d4) ;
-
 auto neighbours = make_vector<float>(d1, d3, d2) ;
-
 auto neighbours2 = make_vector<float>(d1, d4, d2) ;
-
 auto finalarr3 = make_vector<float>(d1, d4, d2) ;
-
 auto neighbourst2 = make_vector<float>(d1, d2, d4) ;
 
 FixedAdjacencyGraph(d1, d2, d3, d4, features, lastnodes, kernelarr, gcnbias, finalarr, neighbours, reluoutputs1);
@@ -709,39 +646,25 @@ Sigmoid2(dim1, d2, finaloutput, finaloutput);
 }
 
 void backward(int32_t d1, int32_t d2, int32_t gcn1dim3, int32_t gcn2dim3, int32_t hdim, int32_t hdim4, int32_t totaltimesteps, auto& layer1W, auto& layer1b, auto& hiddenstates, auto& TotalIt, auto& TotalFt, auto& TotalGt, auto& TotalOt, auto& TotalCt, auto& TotalXt, auto& batchSoft, auto& lab, auto& Fil, auto& RecFil, auto& LSTMBias, auto& neighbourst2, auto& kernel2, auto& features2, auto& A2, auto& neighbours1, auto& kernel1, auto& features1, auto& A1, auto& bias1, auto& bias2, auto& reluoutputs1,auto& reluoutputs2){
+
 auto layer1Der = make_vector<float>(d1, d2) ;
-
 auto dh = make_vector<float>(d1, hdim) ;
-
 auto layer1WTranspose = make_vector<float>(d2, hdim) ;
-
 auto layer1InReshaped = make_vector<float>(hdim, d1) ;
-
 auto layer1WDerReshaped = make_vector<float>(hdim, d2) ;
-
 auto layer1WDer = make_vector<float>(d2, hdim) ;
-
 auto layerFinalHidden = make_vector<float>(d1, hdim) ;
-
 auto hiddenT = make_vector<float>(d1, hdim) ;
-
 auto layer1bDer = make_vector<float>(d2) ;
-
 auto DX = make_vector<float>(d2, totaltimesteps) ;
-
 auto DFilSum = make_vector<float>(d2, hdim4) ;
-
 auto DRecFilSum = make_vector<float>(hdim, hdim4) ;
-
 auto DBiasSum = make_vector<float>(hdim4) ;
-
 auto dbias1 = make_vector<float>(d2) ;
-
 auto dbias2 = make_vector<float>(d2) ;
 
 ReverseAssign3(d1, hdim, totaltimesteps, hiddenstates, layerFinalHidden);
 getSoftDer(d1, d2, lab, batchSoft, layer1Der);
-
 ElemProd(d1, d2, layer1Der, batchSoft, layer1Der);
 SubtractOne(d1, d2, batchSoft, batchSoft);
 ElemProd(d1, d2, layer1Der, batchSoft, layer1Der);
@@ -752,73 +675,72 @@ Transpose2D(hdim, d2, layer1WDerReshaped, layer1WDer);
 Transpose2D(hdim, d2, layer1W, layer1WTranspose);
 MatMul(d1, d2, hdim, layer1Der, layer1WTranspose, dh);
 getBiasDer(d1, d2, layer1Der, layer1bDer);
+
 auto dNextC = make_vector<float>(d1, hdim) ;
 
 for (uint32_t t = 0; t < totaltimesteps; t++){
-auto temp = make_vector<float>(d1, hdim) ;
-auto Ot = make_vector<float>(d1, hdim) ;
-auto It = make_vector<float>(d1, hdim) ;
-auto Ft = make_vector<float>(d1, hdim) ;
-auto Gt = make_vector<float>(d1, hdim) ;
-auto Ct = make_vector<float>(d1, hdim) ;
-auto DOt = make_vector<float>(d1, hdim) ;
-auto DIt = make_vector<float>(d1, hdim) ;
-auto DFt = make_vector<float>(d1, hdim) ;
-auto DGt = make_vector<float>(d1, hdim) ;
-auto DCt = make_vector<float>(d1, hdim) ;
-auto Xt = make_vector<float>(d1, d2) ;
-auto PrevC = make_vector<float>(d1, hdim) ;
-auto NextF = make_vector<float>(d1, hdim) ;
-auto DGates = make_vector<float>(d1, hdim4) ;
-auto FilTranspose = make_vector<float>(hdim4, d2) ;
-auto RecFilTranspose = make_vector<float>(hdim4, hdim) ;
-auto XtTranspose = make_vector<float>(d2, d1) ;
-auto hiddenTTranspose = make_vector<float>(hdim, d1) ;
-auto dXt = make_vector<float>(d1, d2) ;
-auto DFil = make_vector<float>(d2, hdim4) ;
-auto DRecFil = make_vector<float>(hdim, hdim4) ;
+    auto temp = make_vector<float>(d1, hdim) ;
+    auto Ot = make_vector<float>(d1, hdim) ;
+    auto It = make_vector<float>(d1, hdim) ;
+    auto Ft = make_vector<float>(d1, hdim) ;
+    auto Gt = make_vector<float>(d1, hdim) ;
+    auto Ct = make_vector<float>(d1, hdim) ;
+    auto DOt = make_vector<float>(d1, hdim) ;
+    auto DIt = make_vector<float>(d1, hdim) ;
+    auto DFt = make_vector<float>(d1, hdim) ;
+    auto DGt = make_vector<float>(d1, hdim) ;
+    auto DCt = make_vector<float>(d1, hdim) ;
+    auto Xt = make_vector<float>(d1, d2) ;
+    auto PrevC = make_vector<float>(d1, hdim) ;
+    auto NextF = make_vector<float>(d1, hdim) ;
+    auto DGates = make_vector<float>(d1, hdim4) ;
+    auto FilTranspose = make_vector<float>(hdim4, d2) ;
+    auto RecFilTranspose = make_vector<float>(hdim4, hdim) ;
+    auto XtTranspose = make_vector<float>(d2, d1) ;
+    auto hiddenTTranspose = make_vector<float>(hdim, d1) ;
+    auto dXt = make_vector<float>(d1, d2) ;
+    auto DFil = make_vector<float>(d2, hdim4) ;
+    auto DRecFil = make_vector<float>(hdim, hdim4) ;
 
 int32_t __tac_var70 = (totaltimesteps - t) ;
-
 int32_t __tac_var71 = (__tac_var70 - 1) ;
 
-
 ReverseAssign3(d1, hdim, __tac_var71, hiddenstates, hiddenT);
-int32_t __tac_var72 = __tac_var70 ;
 
+int32_t __tac_var72 = __tac_var70 ;
 int32_t __tac_var73 = __tac_var71 ;
 
-
 ReverseAssign3(d1, hdim, __tac_var71, TotalOt, Ot);
-int32_t __tac_var74 = __tac_var70 ;
 
+int32_t __tac_var74 = __tac_var70 ;
 int32_t __tac_var75 = __tac_var71 ;
 
 ReverseAssign3(d1, hdim, __tac_var71, TotalIt, It);
-int32_t __tac_var76 = __tac_var70 ;
 
+int32_t __tac_var76 = __tac_var70 ;
 int32_t __tac_var77 = __tac_var71 ;
 
 ReverseAssign3(d1, hdim, __tac_var71, TotalFt, Ft);
-int32_t __tac_var78 = __tac_var70 ;
 
+int32_t __tac_var78 = __tac_var70 ;
 int32_t __tac_var79 = __tac_var71 ;
 
 ReverseAssign3(d1, hdim, __tac_var71, TotalGt, Gt);
-int32_t __tac_var80 = __tac_var70 ;
 
+int32_t __tac_var80 = __tac_var70 ;
 int32_t __tac_var81 = __tac_var71 ;
 
 ReverseAssign3(d1, hdim, __tac_var70, TotalCt, Ct);
+
 int32_t __tac_var82 = __tac_var70 ;
 
 ReverseAssign3(d1, hdim, __tac_var71, TotalCt, PrevC);
-
 int32_t __tac_var84 = __tac_var70 ;
-if(t!=0)
-{
-ReverseAssign3(d1, hdim, __tac_var70, TotalFt, NextF);
+
+if(t!=0) {
+    ReverseAssign3(d1, hdim, __tac_var70, TotalFt, NextF);
 }
+
 int32_t __tac_var85 = __tac_var70 ;
 
 ReverseAssign3(d1, d2, __tac_var71, TotalXt, Xt);
@@ -1220,17 +1142,13 @@ auto labels = make_vector<float>(d1, d2) ;
 
 for(uint32_t iterations=0; iterations<20; iterations++)
 {
-for (uint32_t ind = 0; ind < 26; ind++){
+    uint32_t ind = 0 ;
+    AssignSampleFromData3D(d2, d3, ind, inp, inputpoint);
+    AssignSampleFromData2D(d2, ind, labs, labels);
 
-AssignSampleFromData3D(d2, d3, ind, inp, inputpoint);
-AssignSampleFromData2D(d2, ind, labs, labels);
-forward(d1, d2, d3, d4, inputpoint, A1, kernel1, bias1, A2, kernel2, bias2, d4, d2, hdim, d1, gatesdim, hidden, cell, k, reck, lstmbias, dense, bias4, FullHt, FullIt, FullFt, FullGt, FullOt, FullCt, FullXt, neight2, feat2, neigh1, feat1, reluoutputs1, reluoutputs2, finaloutput);
-if(ind==25)
-{
-computeLoss(d1, d2, labels, finaloutput);
+    forward(d1, d2, d3, d4, inputpoint, A1, kernel1, bias1, A2, kernel2, bias2, d4, d2, hdim, d1, gatesdim, hidden, cell, k, reck, lstmbias, dense, bias4, FullHt, FullIt, FullFt, FullGt, FullOt, FullCt, FullXt, neight2, feat2, neigh1, feat1, reluoutputs1, reluoutputs2, finaloutput);
+    backward(d1, d2, d3, 16, 16, gatesdim, 16, dense, bias4, FullHt, FullIt, FullFt, FullGt, FullOt, FullCt, FullXt, finaloutput, labels, k, reck, lstmbias, neight2, kernel2, feat2, A2, neigh1, kernel1, feat1, A2, bias1, bias2, reluoutputs1, reluoutputs2);
 }
-backward(d1, d2, d3, 16, 16, gatesdim, 16, dense, bias4, FullHt, FullIt, FullFt, FullGt, FullOt, FullCt, FullXt, finaloutput, labels, k, reck, lstmbias, neight2, kernel2, feat2, A2, neigh1, kernel1, feat1, A2, bias1, bias2, reluoutputs1, reluoutputs2);
-}
-}
+
 return 0;
 }
