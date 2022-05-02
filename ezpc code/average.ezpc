@@ -1,4 +1,4 @@
-uint32 dim = 270;
+uint32 dim = 2;
 
 def void check1(bool_bl[dim] x2, int32_bl threshold, bool_bl result)
 {
@@ -7,14 +7,14 @@ def void check1(bool_bl[dim] x2, int32_bl threshold, bool_bl result)
   {
     count = count + ((x2[i]) ? 1 : 0); 
   };
-  result= count>threshold;
+  result=count>threshold;
 }
 
-def void sum(int32_bl[dim] x1, bool_bl[dim] x2, int32_bl resultfinal) 
+def void sum(int32_bl[dim] x1, bool_bl[dim] x2, int32_bl resultfinal, bool_bl ischeck) 
 {
   for i=[0:dim]
   {
-    resultfinal= resultfinal + ((x2[i]) ? x1[i] : 0);
+    resultfinal= (ischeck) ? (resultfinal + ((x2[i]) ? x1[i] : 0)) : 0;
   };
 }
 
@@ -26,7 +26,12 @@ def void main ()
 
   input(CLIENT, grid2, int32_bl[dim]);
   input(CLIENT, bool2, bool_bl[dim]);
-  
+
+  (*int32_bl[dim] grid1;
+  int32_bl[dim] grid2;
+  bool_bl[dim] bool1;
+  bool_bl[dim] bool2;
+  int32_bl randnum;*)
   int32_bl[dim] grid;
   
   for i=[0:dim]
@@ -36,7 +41,7 @@ def void main ()
 
   bool_bl[dim] clientbool;
 
-  int32_bl thres= 2;
+  int32_bl thres= 0;
   
   for i=[0:dim]
   {
@@ -44,12 +49,12 @@ def void main ()
   };
   
   int32_bl result;
-
   bool_bl firstcheck;
 
   check1(clientbool, thres, firstcheck);
+    
+  sum(grid, clientbool, result, firstcheck);
   
-  sum(grid, clientbool, result);
-
+  output(CLIENT, result-randnum);
 }
 
