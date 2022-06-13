@@ -864,7 +864,6 @@ for(uint32_t iterations=0; iterations<1; iterations++)
         auto lstmbias = make_vector_float_rand(ALICE, gatesdim) ;
         auto dense = make_vector_float_rand(ALICE, d4, d2) ;
         auto bias4 = make_vector_float_rand(ALICE, d2) ;
-
         */
 
         auto FullHt = make_vector_float(ALICE, (d4 + 1), num_assign, d4) ;
