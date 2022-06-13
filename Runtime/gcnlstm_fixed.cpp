@@ -781,9 +781,9 @@ __init(__argc, __argv);
 int32_t num_samples=33;
 int32_t d1 = 23;
 int32_t d2 = 270 ;
-int32_t d3 = 3; 
+int32_t d3 = __sz1 ;
 int32_t d4 = 4 ;
-int32_t hdim = 4;
+int32_t hdim = __sz2 ;
 int32_t gatesdim = d4*4;
 
 auto inp = make_vector_float_rand(ALICE, num_samples, d2, d3) ;
