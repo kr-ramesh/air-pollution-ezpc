@@ -1130,9 +1130,10 @@ int total_timesteps=0;
 cout<<"Starting neural network!"<<endl;
 
 auto start = clock_start();
+float comm_start = __get_comm() ;
 
 
-for(uint32_t iterations=0; iterations<10; iterations++)
+for(uint32_t iterations=0; iterations<1; iterations++)
 {
     int num_assign=0;
     for (uint32_t ind = 0; ind < num_samples; ind=ind+d1){
@@ -1177,8 +1178,14 @@ for(uint32_t iterations=0; iterations<10; iterations++)
         backward(num_assign, d2, d3, 4, 4, gatesdim, 4, dense, bias4, FullHt, FullIt, FullFt, FullGt, FullOt, FullCt, FullXt, finaloutput, labels, k, reck, lstmbias, neight2, kernel2, feat2, A2, neigh1, kernel1, feat1, A2, bias1, bias2, reluoutputs1, reluoutputs2, m1, v1, m2, v2, m3, v3, m4, v4, m5, v5, m6, v6, m7, v7, m8, v8, m9, v9, m10, v10, m11, v11, total_timesteps);
     }
 }
+
 long long t = time_from(start);
+float comm_end = __get_comm() ;
+
 cout << "Total Time:\t" << t / (1000.0) << " ms" << endl;
+cout << "Total comms:\t" << (comm_end - comm_start)/(1 << 20) ;
 
 return 0;
+
+
 }
