@@ -775,24 +775,8 @@ updateWeightsAdam(d2, total_t, 0.001, 0.999, 0.999, 1e-7, layer1b, layer1bDer, m
 
 }
 
-/*IOPack *iopack = nullptr;
-OTPack *otpack = nullptr;
-FPOp *fp_op = nullptr;
-
-string address = "127.0.0.1" ;
-int port = 32000 ;				// exponent bits
-int party = 0 ;*/
-
 int main (int __argc, char **__argv) {
 __init(__argc, __argv);
-
- /* ArgMapping __amap;
-  	__amap.arg("r", __party, "Role of party: ALICE/SERVER = 1; BOB/CLIENT = 2") ;
-	__amap.arg("mbits", __m_bits, "mantissa bits") ;
-	__amap.arg("ebits", __e_bits, "exponent bits") ;
-	__amap.arg("port", port, "port") ;
-	__amap.arg("add", address, "address") ;
-  __amap.parse(__argc, __argv)*/
 
 int32_t num_samples=33;
 int32_t d1 = 23;
@@ -802,297 +786,21 @@ int32_t d4 = 4 ;
 int32_t hdim = 4;
 int32_t gatesdim = d4*4;
 
-/*iopack = new IOPack(__party, port, address);
-otpack = new OTPack(iopack, __party);
-fp_op = new FPOp(__party, iopack, otpack);*/
-auto inp = make_vector_float(ALICE, num_samples, d2, d3) ;
-
-if ((__party == ALICE)) {
-cout << ("Input inp:") << endl ;
-
-}
-float *__tmp_in_inp = new float[1] ;
-
-for (uint32_t i0 = 0; i0 < num_samples; i0++){
-for (uint32_t i1 = 0; i1 < d2; i1++){
-for (uint32_t i2 = 0; i2 < d3; i2++){
-if ((__party == ALICE)) {
-cin >> __tmp_in_inp[0];
-}
-inp[i0][i1][i2] = __fp_op->input(ALICE, 1, __tmp_in_inp, __m_bits, __e_bits) ;
-
-}
-}
-}
-delete[] __tmp_in_inp ;
-
-auto A1 = make_vector_float(ALICE, 1, 270, 270) ;
-
-if ((__party == ALICE)) {
-cout << ("Input A1:") << endl ;
-
-}
-float *__tmp_in_A1 = new float[1] ;
-
-for (uint32_t i0 = 0; i0 < 1; i0++){
-for (uint32_t i1 = 0; i1 < 270; i1++){
-for (uint32_t i2 = 0; i2 < 270; i2++){
-if ((__party == ALICE)) {
-cin >> __tmp_in_A1[0];
-}
-A1[i0][i1][i2] = __fp_op->input(ALICE, 1, __tmp_in_A1, __m_bits, __e_bits) ;
-
-}
-}
-}
-delete[] __tmp_in_A1 ;
-
-auto kernel1 = make_vector_float(ALICE, 1, 3, 4) ;
-
-if ((__party == ALICE)) {
-cout << ("Input kernel1:") << endl ;
-
-}
-float *__tmp_in_kernel1 = new float[1] ;
-
-for (uint32_t i0 = 0; i0 < 1; i0++){
-for (uint32_t i1 = 0; i1 < 3; i1++){
-for (uint32_t i2 = 0; i2 < 4; i2++){
-if ((__party == ALICE)) {
-cin >> __tmp_in_kernel1[0];
-}
-kernel1[i0][i1][i2] = __fp_op->input(ALICE, 1, __tmp_in_kernel1, __m_bits, __e_bits) ;
-
-}
-}
-}
-delete[] __tmp_in_kernel1 ;
-
-auto bias1 = make_vector_float(ALICE, 270) ;
-
-if ((__party == ALICE)) {
-cout << ("Input bias1:") << endl ;
-
-}
-float *__tmp_in_bias1 = new float[1] ;
-
-for (uint32_t i0 = 0; i0 < 270; i0++){
-if ((__party == ALICE)) {
-cin >> __tmp_in_bias1[0];
-}
-bias1[i0] = __fp_op->input(ALICE, 1, __tmp_in_bias1, __m_bits, __e_bits) ;
-
-}
-delete[] __tmp_in_bias1 ;
-
-auto A2 = make_vector_float(ALICE, 1, 270, 270) ;
-
-if ((__party == ALICE)) {
-cout << ("Input A2:") << endl ;
-
-}
-float *__tmp_in_A2 = new float[1] ;
-
-for (uint32_t i0 = 0; i0 < 1; i0++){
-for (uint32_t i1 = 0; i1 < 270; i1++){
-for (uint32_t i2 = 0; i2 < 270; i2++){
-if ((__party == ALICE)) {
-cin >> __tmp_in_A2[0];
-}
-A2[i0][i1][i2] = __fp_op->input(ALICE, 1, __tmp_in_A2, __m_bits, __e_bits) ;
-
-}
-}
-}
-delete[] __tmp_in_A2 ;
-
-auto kernel2 = make_vector_float(ALICE, 1, 4, 4) ;
-
-if ((__party == ALICE)) {
-cout << ("Input kernel2:") << endl ;
-
-}
-float *__tmp_in_kernel2 = new float[1] ;
-
-for (uint32_t i0 = 0; i0 < 1; i0++){
-for (uint32_t i1 = 0; i1 < 4; i1++){
-for (uint32_t i2 = 0; i2 < 4; i2++){
-if ((__party == ALICE)) {
-cin >> __tmp_in_kernel2[0];
-}
-kernel2[i0][i1][i2] = __fp_op->input(ALICE, 1, __tmp_in_kernel2, __m_bits, __e_bits) ;
-
-}
-}
-}
-delete[] __tmp_in_kernel2 ;
-
-auto bias2 = make_vector_float(ALICE, 270) ;
-
-if ((__party == ALICE)) {
-cout << ("Input bias2:") << endl ;
-
-}
-float *__tmp_in_bias2 = new float[1] ;
-
-for (uint32_t i0 = 0; i0 < 270; i0++){
-if ((__party == ALICE)) {
-cin >> __tmp_in_bias2[0];
-}
-bias2[i0] = __fp_op->input(ALICE, 1, __tmp_in_bias2, __m_bits, __e_bits) ;
-
-}
-delete[] __tmp_in_bias2 ;
-
-auto hidden = make_vector_float(ALICE, d1, 4) ;
-
-if ((__party == ALICE)) {
-cout << ("Input hidden:") << endl ;
-
-}
-float *__tmp_in_hidden = new float[1] ;
-
-for (uint32_t i0 = 0; i0 < 1; i0++){
-for (uint32_t i1 = 0; i1 < 4; i1++){
-if ((__party == ALICE)) {
-cin >> __tmp_in_hidden[0];
-}
-hidden[i0][i1] = __fp_op->input(ALICE, 1, __tmp_in_hidden, __m_bits, __e_bits) ;
-
-}
-}
-delete[] __tmp_in_hidden ;
-
-auto cell = make_vector_float(ALICE, d1, 4) ;
-
-if ((__party == ALICE)) {
-cout << ("Input cell:") << endl ;
-
-}
-float *__tmp_in_cell = new float[1] ;
-
-for (uint32_t i0 = 0; i0 < 1; i0++){
-for (uint32_t i1 = 0; i1 < 4; i1++){
-if ((__party == ALICE)) {
-cin >> __tmp_in_cell[0];
-}
-cell[i0][i1] = __fp_op->input(ALICE, 1, __tmp_in_cell, __m_bits, __e_bits) ;
-
-}
-}
-delete[] __tmp_in_cell ;
-
-auto k = make_vector_float(ALICE, 270, 16) ;
-
-if ((__party == ALICE)) {
-cout << ("Input k:") << endl ;
-
-}
-float *__tmp_in_k = new float[1] ;
-
-for (uint32_t i0 = 0; i0 < 270; i0++){
-for (uint32_t i1 = 0; i1 < 16; i1++){
-if ((__party == ALICE)) {
-cin >> __tmp_in_k[0];
-}
-k[i0][i1] = __fp_op->input(ALICE, 1, __tmp_in_k, __m_bits, __e_bits) ;
-
-}
-}
-delete[] __tmp_in_k ;
-
-auto reck = make_vector_float(ALICE, 4, 16) ;
-
-if ((__party == ALICE)) {
-cout << ("Input reck:") << endl ;
-
-}
-float *__tmp_in_reck = new float[1] ;
-
-for (uint32_t i0 = 0; i0 < 4; i0++){
-for (uint32_t i1 = 0; i1 < 16; i1++){
-if ((__party == ALICE)) {
-cin >> __tmp_in_reck[0];
-}
-reck[i0][i1] = __fp_op->input(ALICE, 1, __tmp_in_reck, __m_bits, __e_bits) ;
-
-}
-}
-delete[] __tmp_in_reck ;
-
-auto lstmbias = make_vector_float(ALICE, 16) ;
-
-if ((__party == ALICE)) {
-cout << ("Input lstmbias:") << endl ;
-
-}
-float *__tmp_in_lstmbias = new float[1] ;
-
-for (uint32_t i0 = 0; i0 < 16; i0++){
-if ((__party == ALICE)) {
-cin >> __tmp_in_lstmbias[0];
-}
-lstmbias[i0] = __fp_op->input(ALICE, 1, __tmp_in_lstmbias, __m_bits, __e_bits) ;
-
-}
-delete[] __tmp_in_lstmbias ;
-
-auto dense = make_vector_float(ALICE, 4, 270) ;
-
-if ((__party == ALICE)) {
-cout << ("Input dense:") << endl ;
-
-}
-float *__tmp_in_dense = new float[1] ;
-
-for (uint32_t i0 = 0; i0 < 4; i0++){
-for (uint32_t i1 = 0; i1 < 270; i1++){
-if ((__party == ALICE)) {
-cin >> __tmp_in_dense[0];
-}
-dense[i0][i1] = __fp_op->input(ALICE, 1, __tmp_in_dense, __m_bits, __e_bits) ;
-
-}
-}
-delete[] __tmp_in_dense ;
-
-auto bias4 = make_vector_float(ALICE, 270) ;
-
-if ((__party == ALICE)) {
-cout << ("Input bias4:") << endl ;
-
-}
-float *__tmp_in_bias4 = new float[1] ;
-
-for (uint32_t i0 = 0; i0 < 270; i0++){
-if ((__party == ALICE)) {
-cin >> __tmp_in_bias4[0];
-}
-bias4[i0] = __fp_op->input(ALICE, 1, __tmp_in_bias4, __m_bits, __e_bits) ;
-
-}
-delete[] __tmp_in_bias4 ;
-
-
-auto labs = make_vector_float(ALICE, num_samples, d2) ;
-
-if ((__party == ALICE)) {
-cout << ("Input labels:") << endl ;
-}
-
-float *__tmp_in_labs = new float[1] ;
-for (uint32_t i1= 0; i1<num_samples;i1++){
-for (uint32_t i0 = 0; i0 < 270; i0++){
-if ((__party == ALICE)) {
-cin >> __tmp_in_labs[0];
-}
-labs[i1][i0] = __fp_op->input(ALICE, 1, __tmp_in_labs, __m_bits, __e_bits) ;
-}
-}
-delete[] __tmp_in_labs ;
-
-//auto inp = make_vector_float(ALICE, num_samples, d2, d3) ;
-
+auto inp = make_vector_float_rand(ALICE, num_samples, d2, d3) ;
+auto A1 = make_vector_float_rand(ALICE, 1, 270, 270) ;
+auto kernel1 = make_vector_float_rand(ALICE, 1, 3, 4) ;
+auto bias1 = make_vector_float_rand(ALICE, 270) ;
+auto A2 = make_vector_float_rand(ALICE, 1, 270, 270) ;
+auto kernel2 = make_vector_float_rand(ALICE, 1, 4, 4) ;
+auto bias2 = make_vector_float_rand(ALICE, 270) ;
+auto hidden = make_vector_float_rand(ALICE, d1, 4) ;
+auto cell = make_vector_float_rand(ALICE, d1, 4) ;
+auto k = make_vector_float_rand(ALICE, 270, 16) ;
+auto reck = make_vector_float_rand(ALICE, 4, 16) ;
+auto lstmbias = make_vector_float_rand(ALICE, 16) ;
+auto dense = make_vector_float_rand(ALICE, 4, 270) ;
+auto bias4 = make_vector_float_rand(ALICE, 270) ;
+auto labs = make_vector_float_rand(ALICE, num_samples, d2) ;
 
 auto neight2 = make_vector_float(ALICE, d2, d4) ;
 auto feat2 = make_vector_float(ALICE, d2, d4) ;
@@ -1124,7 +832,6 @@ auto v10 = make_vector_float(ALICE, hdim, d2) ;
 auto m11 = make_vector_float(ALICE, d2) ;
 auto v11 = make_vector_float(ALICE, d2) ;
 
-
 int total_timesteps=0;
 
 cout<<"Starting neural network!"<<endl;
@@ -1142,7 +849,9 @@ for(uint32_t iterations=0; iterations<1; iterations++)
         else
         num_assign=d1;
         
-        /*auto A1 = make_vector_float_rand(ALICE, num_assign, d2, d2) ;
+        /*
+
+        auto A1 = make_vector_float_rand(ALICE, num_assign, d2, d2) ;
         auto kernel1 = make_vector_float_rand(ALICE, num_assign, d3, d4) ;
         auto bias1 = make_vector_float_rand(ALICE, d2) ;
         auto A2 = make_vector_float_rand(ALICE, num_assign, d2, d2) ;
@@ -1154,7 +863,10 @@ for(uint32_t iterations=0; iterations<1; iterations++)
         auto reck = make_vector_float_rand(ALICE, d4, gatesdim) ;
         auto lstmbias = make_vector_float_rand(ALICE, gatesdim) ;
         auto dense = make_vector_float_rand(ALICE, d4, d2) ;
-        auto bias4 = make_vector_float_rand(ALICE, d2) ;*/
+        auto bias4 = make_vector_float_rand(ALICE, d2) ;
+
+        */
+
         auto FullHt = make_vector_float(ALICE, (d4 + 1), num_assign, d4) ;
         auto FullIt = make_vector_float(ALICE, d4, num_assign, d4) ;
         auto FullFt = make_vector_float(ALICE, d4, num_assign, d4) ;
@@ -1165,6 +877,7 @@ for(uint32_t iterations=0; iterations<1; iterations++)
         auto inputpoint = make_vector_float(ALICE, num_assign, d2, d3) ;
         auto labels = make_vector_float(ALICE, num_assign, d2) ;
         auto finaloutput = make_vector_float(ALICE, num_assign, d2) ;
+
         cout<<"Assignment"<<endl;
         AssignSampleFromData3D(num_assign, d2, d3, ind, inp, inputpoint);
         cout<<"Second Assignment"<<endl;
@@ -1172,10 +885,13 @@ for(uint32_t iterations=0; iterations<1; iterations++)
 
         cout<<"FORWARD"<<endl;
         forward(num_assign, d2, d3, d4, inputpoint, A1, kernel1, bias1, A2, kernel2, bias2, d4, d2, hdim, num_assign, gatesdim, hidden, cell, k, reck, lstmbias, dense, bias4, FullHt, FullIt, FullFt, FullGt, FullOt, FullCt, FullXt, neight2, feat2, neigh1, feat1, reluoutputs1, reluoutputs2, finaloutput);
+
         //computeLoss(d1, d2, labels, finaloutput);
+
         cout<<"BACKWARD"<<endl;
-        total_timesteps+=1;
         backward(num_assign, d2, d3, 4, 4, gatesdim, 4, dense, bias4, FullHt, FullIt, FullFt, FullGt, FullOt, FullCt, FullXt, finaloutput, labels, k, reck, lstmbias, neight2, kernel2, feat2, A2, neigh1, kernel1, feat1, A2, bias1, bias2, reluoutputs1, reluoutputs2, m1, v1, m2, v2, m3, v3, m4, v4, m5, v5, m6, v6, m7, v7, m8, v8, m9, v9, m10, v10, m11, v11, total_timesteps);
+
+        total_timesteps+=1;
     }
 }
 
