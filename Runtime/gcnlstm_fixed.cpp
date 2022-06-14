@@ -537,21 +537,24 @@ auto neighbours2 = make_vector_float(ALICE, d1, d4, d2) ;
 auto finalarr3 = make_vector_float(ALICE, d1, d4, d2) ;
 auto neighbourst2 = make_vector_float(ALICE, d1, d2, d4) ;
 
+cout<<"GCN LSTM1"<<endl;
 FixedAdjacencyGraph(d1, d2, d3, d4, features, lastnodes, kernelarr, gcnbias, finalarr, neighbours, reluoutputs1);
 ReverseAssign3(d2, d3, 0, features, feat1);
 ReverseAssign3(d3, d2, 0, neighbours, neigh1);
 
-
+cout<<"GCN LSTM2"<<endl;
 FixedAdjacencyGraph(d1, d2, d4, d4, finalarr, lastnodes2, kernelarr2, gcnbias2, finalarr2, neighbours2, reluoutputs2);
 Transpose3D(d1, d4, d2, neighbours2, neighbourst2);
 ReverseAssign3(d2, d4, 0, neighbourst2, neight2);
 ReverseAssign3(d2, d4, 0, finalarr, feat2);
 Transpose3D(d1, d2, d4, finalarr2, finalarr3);
 
+cout<<"LSTM1"<<endl;
 Assign3(d1, hdim, 0, cellstates, FullCt);
 LSTM3D(unitstotal, idim, hdim, dim1, dim3, finalarr3, hstates, cellstates, lstmkernel, reclstmkernel, lstmbias, FullHt, FullIt, FullFt, FullGt, FullOt, FullCt, FullXt);
 Assign3(d1, hdim, d4, hstates, FullHt);
 
+cout<<"Dense"<<endl;
 MatMul(dim1, hdim, d2, hstates, denselayer, finaloutput);
 GemmAdd(dim1, d2, finaloutput, bias4, finaloutput);
 Sigmoid2(dim1, d2, finaloutput, finaloutput);
@@ -760,7 +763,6 @@ MatMul(gcn1dim3, d2, gcn2dim3, neighbours1, dfeatures2, dkernelarr);
 MatMul(gcn1dim3, gcn2dim3, d2, kernelarr, dfeatures2t, dneighbours1);
 MatMul(d2, gcn1dim3, d2, features1, dneighbours1, dLastnodes1);
 
-
 updateWeightsAdam2(gcn1dim3, gcn2dim3, total_t, 0.001, 0.999, 0.999, 1e-7, kernelarr, dkernelarr, m1, v1);
 updateWeightsAdam2(totaltimesteps, gcn2dim3, total_t, 0.001, 0.999, 0.999, 1e-7, kernelarr2, dkernelarr2, m2, v2);
 updateWeightsAdam2(d2, d2, total_t, 0.001, 0.999, 0.999, 1e-7, dLastnodes1, lastnodes, m3, v3);
@@ -770,9 +772,8 @@ updateWeightsAdam(d2, total_t, 0.001, 0.999, 0.999, 1e-7, dbias2, bias2, v6, v6)
 updateWeightsAdam2(d2, hdim4, total_t, 0.001, 0.999, 0.999, 1e-7, Fil, DFilSum, m7, v7);
 updateWeightsAdam2(hdim, hdim4, total_t, 0.001, 0.999, 0.999, 1e-7, RecFil, DRecFilSum, m8, v8);
 updateWeightsAdam(hdim4, total_t, 0.001, 0.999, 0.999, 1e-7, LSTMBias, DBiasSum, m9, v9);
-updateWeightsAdam2(hdim, total_t, d2, 0.001, 0.999, 0.99, 1e-7, layer1W, layer1WDerReshaped, m10, v10);
+updateWeightsAdam2(hdim, d2, total_t, 0.001, 0.999, 0.99, 1e-7, layer1W, layer1WDerReshaped, m10, v10);
 updateWeightsAdam(d2, total_t, 0.001, 0.999, 0.999, 1e-7, layer1b, layer1bDer, m11, v11);
-
 }
 
 int main (int __argc, char **__argv) {
@@ -787,19 +788,19 @@ int32_t hdim = __sz2 ;
 int32_t gatesdim = d4*4;
 
 auto inp = make_vector_float_rand(ALICE, num_samples, d2, d3) ;
-auto A1 = make_vector_float_rand(ALICE, 1, 270, 270) ;
-auto kernel1 = make_vector_float_rand(ALICE, 1, 3, 4) ;
-auto bias1 = make_vector_float_rand(ALICE, 270) ;
-auto A2 = make_vector_float_rand(ALICE, 1, 270, 270) ;
-auto kernel2 = make_vector_float_rand(ALICE, 1, 4, 4) ;
-auto bias2 = make_vector_float_rand(ALICE, 270) ;
-auto hidden = make_vector_float_rand(ALICE, d1, 4) ;
-auto cell = make_vector_float_rand(ALICE, d1, 4) ;
-auto k = make_vector_float_rand(ALICE, 270, 16) ;
-auto reck = make_vector_float_rand(ALICE, 4, 16) ;
-auto lstmbias = make_vector_float_rand(ALICE, 16) ;
-auto dense = make_vector_float_rand(ALICE, 4, 270) ;
-auto bias4 = make_vector_float_rand(ALICE, 270) ;
+auto A1 = make_vector_float_rand(ALICE, 1, d2, d2) ;
+auto kernel1 = make_vector_float_rand(ALICE, 1, d3, d4) ;
+auto bias1 = make_vector_float_rand(ALICE, d2) ;
+auto A2 = make_vector_float_rand(ALICE, 1, d2, d2) ;
+auto kernel2 = make_vector_float_rand(ALICE, 1, d4, d4) ;
+auto bias2 = make_vector_float_rand(ALICE, d2) ;
+auto hidden = make_vector_float_rand(ALICE, d1, hdim) ;
+auto cell = make_vector_float_rand(ALICE, d1, hdim) ;
+auto k = make_vector_float_rand(ALICE, d2, hdim*4) ;
+auto reck = make_vector_float_rand(ALICE, hdim, hdim*4) ;
+auto lstmbias = make_vector_float_rand(ALICE, hdim*4) ;
+auto dense = make_vector_float_rand(ALICE, hdim, d2) ;
+auto bias4 = make_vector_float_rand(ALICE, d2) ;
 auto labs = make_vector_float_rand(ALICE, num_samples, d2) ;
 
 auto neight2 = make_vector_float(ALICE, d2, d4) ;
