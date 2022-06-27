@@ -29,6 +29,7 @@ extern void IfElse(int32_t s1, vector < FPArray >& dat, vector < BoolArray >& ho
 extern void updateWeights(int32_t s, float lr, vector < FPArray >& bias, vector < FPArray >& der);
 extern void updateWeightsAdam(int32_t s1, int32_t t, float lr, float beta1, float beta2, float eps, vector<FPArray>& inArr, vector<FPArray>& derArr, vector<FPArray>& mArr, vector<FPArray>& vArr) ;
 extern void getLoss(int32_t m, vector < FPArray >& lossTerms, vector < FPArray >& loss);
+extern void MatMul3(int32_t d1, int32_t d2, int32_t d3, int32_t d4, vector<vector<vector<FPArray>>> &arr1, vector<vector<vector<FPArray>>> &arr2, vector<vector<vector<FPArray>>> &arr3) ;
 
 void ElemWiseMul2(int32_t s1, int32_t s2, vector<vector<FPArray>>& arr1, vector<vector<FPArray>>& arr2, vector<vector<FPArray>>& outArr) {
     int sz = s1*s2 ;
@@ -311,29 +312,6 @@ out[i1][i2] = outFlat[((i1 * s2) + i2)] ;
 }
 
 
-void MatMul3(int32_t d1, int32_t d2, int32_t d3, int32_t d4, auto& arr1, auto& arr2, auto& arr3){
-auto a1 = make_vector_float(ALICE, d2, d3) ;
-auto a2 = make_vector_float(ALICE, d3, d4) ;
-auto a3 = make_vector_float(ALICE, d2, d4) ;
-for (uint32_t i0 = 0; i0 < d1; i0++){
-    ReverseAssign3(d2, d3, i0, arr1, a1);
-    ReverseAssign3(d3, d4, i0, arr2, a2);
-    MatMul(d2, d3, d4, a1, a2, a3);
-    Assign3(d2, d4, i0, a3, arr3);
-}
-}
-
-void MatMul3LayerA(int32_t d1, int32_t d2, int32_t d3, int32_t d4, auto& arr1, auto& arr2, auto& arr3){
-auto a1 = make_vector_float(ALICE, d2, d3) ;
-auto a2 = make_vector_float(ALICE, d3, d4) ;
-auto a3 = make_vector_float(ALICE, d2, d4) ;
-for (uint32_t i0 = 0; i0 < d1; i0++){
-    ReverseAssign3(d2, d3, i0, arr1, a1);
-    ReverseAssign3(d3, d4, 0, arr2, a2);
-    MatMul(d2, d3, d4, a1, a2, a3);
-    Assign3(d2, d4, i0, a3, arr3);
-}
-}
 
 void Transpose3D(int32_t s1, int32_t s2, int32_t s3, auto& inArr, auto& outArr){
 for (uint32_t i1 = 0; i1 < s1; i1++){
@@ -419,9 +397,9 @@ auto neighbourst = make_vector_float(ALICE, d1, d2, d3) ;
 auto outputarr = make_vector_float(ALICE, d1, d2, d4) ;
 auto ht = make_vector_bool(ALICE, d1, d2, d4) ;
 Transpose3D(d1, d2, d3, features, featurest);
-MatMul3LayerA(d1, d3, d2, d2, featurest, lastnodes, neighbours);
+MatMul3(d1, d3, d2, d2, featurest, lastnodes, neighbours);
 Transpose3D(d1, d3, d2, neighbours, neighbourst);
-MatMul3LayerA(d1, d2, d3, d4, neighbourst, kernelarr, outputarr);
+MatMul3(d1, d2, d3, d4, neighbourst, kernelarr, outputarr);
 GemmAdd3(d1, d2, d4, outputarr, bias, outputarr);
 Relu3(d1, d2, d4, outputarr, finalarr, ht);
 reluoutputs = ht[0] ;
@@ -1176,6 +1154,109 @@ for(uint32_t iterations=0; iterations<1; iterations++)
         cout<<"BACKWARD"<<endl;
         total_timesteps+=1;
         backward(num_assign, d2, d3, 4, 4, gatesdim, 4, dense, bias4, FullHt, FullIt, FullFt, FullGt, FullOt, FullCt, FullXt, finaloutput, labels, k, reck, lstmbias, neight2, kernel2, feat2, A2, neigh1, kernel1, feat1, A2, bias1, bias2, reluoutputs1, reluoutputs2, m1, v1, m2, v2, m3, v3, m4, v4, m5, v5, m6, v6, m7, v7, m8, v8, m9, v9, m10, v10, m11, v11, total_timesteps);
+    }
+    if((iterations+1)%5==0)
+    {
+        for (uint32_t i0 = 0; i0 < 1; i0++){
+        for (uint32_t i1 = 0; i1 < 270; i1++){
+        for (uint32_t i2 = 0; i2 < 270; i2++){
+        FPArray print_=__fp_op->output(PUBLIC, A1[i0][i1][i2]);
+        vector<float> f_=print_.get_native_type<float>();
+        cout<<f_[0]<<" ";
+        }
+        }
+        }
+        cout<<endl;
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 < 1; i0++){
+        for (uint32_t i1 = 0; i1 < 3; i1++){
+        for (uint32_t i2 = 0; i2 < 4; i2++){
+        FPArray print_=__fp_op->output(PUBLIC, kernel1[i0][i1][i2]);
+        vector<float> f_=print_.get_native_type<float>();
+        cout<<f_[0]<<" ";
+        }
+        }
+        }
+        cout<<endl;
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 < 270; i0++){
+        FPArray print_=__fp_op->output(PUBLIC, bias1[i0]);
+        vector<float> f_=print_.get_native_type<float>();
+        cout<<f_[0]<<" ";
+        }
+
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 < 1; i0++){
+        for (uint32_t i1 = 0; i1 < 270; i1++){
+        for (uint32_t i2 = 0; i2 < 270; i2++){
+        FPArray print_=__fp_op->output(PUBLIC, A2[i0][i1][i2]);
+        vector<float> f_=print_.get_native_type<float>();
+        cout<<f_[0]<<" ";
+        }
+        }
+        }
+        cout<<endl;
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 < 1; i0++){
+        for (uint32_t i1 = 0; i1 < 4; i1++){
+        for (uint32_t i2 = 0; i2 < 4; i2++){
+        FPArray print_=__fp_op->output(PUBLIC, kernel2[i0][i1][i2]);
+        vector<float> f_=print_.get_native_type<float>();
+        cout<<f_[0]<<" ";
+        }
+        }
+        }
+        cout<<endl;
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 < 270; i0++){
+        FPArray print_=__fp_op->output(PUBLIC, bias2[i0]);
+        vector<float> f_=print_.get_native_type<float>();
+        cout<<f_[0]<<" ";
+        }
+
+        cout<<endl;
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 < 270; i0++){
+        for (uint32_t i1 = 0; i1 < 16; i1++){
+        FPArray print_=__fp_op->output(PUBLIC, k[i0][i1]);
+        vector<float> f_=print_.get_native_type<float>();
+        cout<<f_[0]<<" ";
+        }
+        }
+        cout<<endl;
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 <4; i0++){
+        for (uint32_t i1 = 0; i1 < 16; i1++){
+        FPArray print_=__fp_op->output(PUBLIC, reck[i0][i1]);
+        vector<float> f_=print_.get_native_type<float>();
+        cout<<f_[0]<<" ";
+        }
+        }
+        cout<<endl;
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 < 16; i0++){
+        FPArray print_=__fp_op->output(PUBLIC, lstmbias[i0]);
+        vector<float> f_=print_.get_native_type<float>();
+        cout<<f_[0]<<" ";
+        }
+        cout<<endl;
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 < 270; i0++){
+        FPArray print_=__fp_op->output(PUBLIC, bias4[i0]);
+        vector<float> f_=print_.get_native_type<float>();
+        cout<<f_[0]<<" ";
+        }
+        cout<<endl;
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 < 4; i0++){
+        for (uint32_t i1 = 0; i1 < 270; i1++){
+        FPArray print_=__fp_op->output(PUBLIC, dense[i0][i1]);
+        vector<float> f_=print_.get_native_type<float>();
+        cout<<f_[0]<<" ";
+        }
+        }
+        cout<<endl;
+        cout<<endl;
     }
 }
 
