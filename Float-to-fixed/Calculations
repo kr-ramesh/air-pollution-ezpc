@@ -1,0 +1,72 @@
+Input grid size=M*M
+[8, M, M]= 8*M*M
+
+Notes
+-All other values such as hidden_dim assumed as per architecture
+-Multiply this by the number of layers of ConvLSTM cells (this is per ConvLSTM cell)
+-The shapes of the gates are the same for F, I, O
+-conv is
+SIGMOID=T*8M^2
+Addition=T*8M^2
+Sub=T*8M^2
+Mul=9*(M-F+3)(M-F+3)
+derivative for convs with respect to weights is
+summation from t=1 to T:
+	sum+=(DL/Dgate*Dgate/Dweight_matrix)*(d_x or d_ht-1)
+-tanh can be ignored like sigmoid if it is precomputed and stored
+
+
+For Whi, Wxi  (calculations are same for both these parameters)
+
+Sigmoid=8M^2* (all sigmoid can be computed in forward propagation) + T*8M^2
+Mul= 7*8M^2+conv
+Mul= 7*8M^2+(M-F+3)*(M-F+3)*9
+Div=8M^2
+tanh=8M^2
+Sub=3*8M^2+T*8M^2
+Addition=T*8M^2+9*(M-F+3)*(M-F+3)
+
+For Wci
+
+Sigmoid=8M^2* (all sigmoid can be computed in forward propagation)
+Mul= 7*8M^2
+Div=8M^2
+tanh=8M^2
+Sub=3*8M^2
+
+For Wxf, Whf
+
+Since the activation shapes are the same, the above calculations for Whi, Wxi are the same as that for Wxf, Whf
+
+For Wcf
+
+Since the activation shapes are the same, the above calculation for Wci is the same as that for Wcf
+
+For Whc, Wxc
+
+Mul= 5*8M^2+conv
+Mul= 5*8M^2+(M-F+3)*(M-F+3)*9
+Addition=T*8M^2+9*(M-F+3)*(M-F+3)
+Div=8M^2
+tanh=8M^2
+Sub=2*8M^2+T*8M^2
+Sigmoid=8M^2* (all sigmoid can be computed in forward propagation)+T*8M^2
+
+For Wxo, Who
+
+Sub=8*M^2+T*8M^2
+tanh=8*M^2
+Sigmoid=T*8M^2
+Div=8*M^2
+Mul= 2*8M^2+conv
+Mul= 2*8M^2+(M-F+3)*(M-F+3)*9
+Addition=9*(M-F+3)*(M-F+3)+T*8M^2
+
+
+For Wco
+
+Sub=8*M^2
+tanh=8*M^2
+Sigmoid=0
+Div=8*M^2
+Mul= 2*8M^2
