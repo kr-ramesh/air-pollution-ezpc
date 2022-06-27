@@ -19,7 +19,7 @@ BoolOp *bool_op= nullptr;
 int party = 1;
 int bit_len=32;
 string address = "127.0.0.1";
-int port = 8000;
+int port = 32000;
 uint8_t m_bits = 23, e_bits =8;
 
 tuple<BoolArray,BoolArray,FixArray,FixArray> get_components(const FPArray &x) {
