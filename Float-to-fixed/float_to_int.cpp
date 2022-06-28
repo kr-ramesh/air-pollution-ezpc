@@ -21,6 +21,7 @@ int bit_len=32;
 string address = "127.0.0.1";
 int port = 32000;
 uint8_t m_bits = 23, e_bits =8;
+vector<uint64_t> spec_vec_v0 ;
 
 tuple<BoolArray,BoolArray,FixArray,FixArray> get_components(const FPArray &x) {
   BoolArray x_s = bool_op->input(x.party, x.size, x.s);
@@ -43,56 +44,14 @@ uint64_t do_shift(int s) {
   return (((uint64_t)1) << s) ;
 }
 
-int main(int argc, char **argv) {
-  cout.precision(15);
-
-  ArgMapping amap;
-
-  amap.arg("r", party, "Role of party: ALICE/SERVER = 1; BOB/CLIENT = 2");
-  amap.arg("p", port, "Port Number");
-  amap.arg("ip", address, "IP Address of server (ALICE)");
-  amap.parse(argc, argv);
-  
-  iopack = new IOPack(party, port, address);
-  otpack = new OTPack(iopack, party);
-    
-  srand(time(0));  // Initialize random number generator.
-
-  fp_op = new FPOp(party, iopack, otpack);
-  fp_math = new FPMath(party, iopack, otpack);
-  fix = new FixOp(party, iopack, otpack);
-  bool_op= new BoolOp(party, iopack, otpack);
-  auto start = clock_start();
-  uint64_t comm_start = iopack->get_comm();
-  uint64_t initial_rounds = iopack->get_rounds();
-    
-  //vector for the generation of the LUT
-  vector<uint64_t> spec_vec_v0;
-  for(int i=0;i<64;i++)
-  	spec_vec_v0.insert(spec_vec_v0.end(), pow(2, i));
-  	
-  //Sample numbers for testing
-  // float f_1[]={4.9042821504535347,9.00000001,0,22.0507667243214,-99.6175791042,22.244144885, 88.3889394614,67.5236281643,74.8189688697,4.840235094,11.0652513346,69.1172942636,65.3377424597,74.3603258759,68.8458678959,22.0030407771,39.144387384,93.5312618825,23.5384549711,52.0022613425};
-  vector<float> f_1 ;
-  uint32_t num = do_shift(24) ;
-  float f ;
-  for (uint64_t i = 0 ; i <= do_shift(8) ; i += 1) {
-    num++ ;
-    f = *((float*)&num) ;
-
-    if (isnormal(f))
-      f_1.push_back(f) ;
-  }
-
-    
-  //Initialization of array with test inputs, the FPArray containing these test inputs (size is set to 20)
-  uint64_t sz = (uint64_t)f_1.size() ;
-  FPArray x = fp_op->input<float>(ALICE, sz, &f_1[0], m_bits, e_bits);
+FixArray float_to_int(FPArray &x) {
   BoolArray x_s, x_z, is_sign, is_greater_than_23, is_greater_than_0;
   FixArray x_m, x_e, check, print_;
   
   //SZME format is extracted
   tie(x_s, x_z, x_m, x_e) = get_components(x);
+  uint64_t sz = x.size ;
+
   
   //Returns true if the sign bit has been set to 1, else 0
   is_sign=bool_op->AND(bool_op->input(ALICE, sz, 1), x_s);
@@ -122,12 +81,62 @@ int main(int argc, char **argv) {
   //Result is negative if the sign bit has been set, else positive
   result=fix->if_else(is_sign, fix->mul(result, uint64_t(-1), 63), result);
 
+  return result ;
+}
+
+int main(int argc, char **argv) {
+  cout.precision(15);
+
+  ArgMapping amap;
+
+  amap.arg("r", party, "Role of party: ALICE/SERVER = 1; BOB/CLIENT = 2");
+  amap.arg("p", port, "Port Number");
+  amap.arg("ip", address, "IP Address of server (ALICE)");
+  amap.parse(argc, argv);
   
-  //Prints the resulting FixArray. Checks if the result concurs with the values stored in real_value (this is for testing purposes only)  
-  print_=fix->output(PUBLIC, result);
+  iopack = new IOPack(party, port, address);
+  otpack = new OTPack(iopack, party);
+    
+  srand(time(0));  // Initialize random number generator.
+
+  fp_op = new FPOp(party, iopack, otpack);
+  fp_math = new FPMath(party, iopack, otpack);
+  fix = new FixOp(party, iopack, otpack);
+  bool_op= new BoolOp(party, iopack, otpack);
+    
+  //vector for the generation of the LUT
+  for(int i=0;i<64;i++)
+  	spec_vec_v0.insert(spec_vec_v0.end(), pow(2, i));
+  	
+  //Sample numbers for testing
+  // float f_1[]={4.9042821504535347,9.00000001,0,22.0507667243214,-99.6175791042,22.244144885, 88.3889394614,67.5236281643,74.8189688697,4.840235094,11.0652513346,69.1172942636,65.3377424597,74.3603258759,68.8458678959,22.0030407771,39.144387384,93.5312618825,23.5384549711,52.0022613425};
+  vector<float> f_1 ;
+  uint32_t num = do_shift(24) ;
+  float f ;
+  for (uint64_t i = 0 ; i <= do_shift(8) ; i += 1) {
+    num++ ;
+    f = *((float*)&num) ;
+
+    if (isnormal(f))
+      f_1.push_back(f) ;
+  }
+
+  //Initialization of array with test inputs, the FPArray containing these test inputs (size is set to 20)
+  uint64_t sz = (uint64_t)f_1.size() ;
+  FPArray x = fp_op->input<float>(ALICE, sz, &f_1[0], m_bits, e_bits);
+
+  auto start = clock_start();
+  uint64_t comm_start = iopack->get_comm();
+  uint64_t initial_rounds = iopack->get_rounds();
+
+  FixArray res ;
+  res = float_to_int(x) ;
 
   uint64_t comm_end = iopack->get_comm();
   long long t = time_from(start);
+
+  //Prints the resulting FixArray. Checks if the result concurs with the values stored in real_value (this is for testing purposes only)  
+  FixArray print_=fix->output(PUBLIC, res);
 
   bool chk = true ;
   // cout << "(Secure, Clear) - \n" ;
