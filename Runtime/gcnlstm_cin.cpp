@@ -772,10 +772,10 @@ __init(__argc, __argv);
 	__amap.arg("add", address, "address") ;
   __amap.parse(__argc, __argv)*/
 
-int32_t num_samples=33;
-int32_t d1 = 23;
+int32_t num_samples=30;
+int32_t d1 = 19;
 int32_t d2 = 270 ;
-int32_t d3 = 3; 
+int32_t d3 = 6; 
 int32_t d4 = 4 ;
 int32_t hdim = 4;
 int32_t gatesdim = d4*4;
@@ -825,7 +825,7 @@ A1[i0][i1][i2] = __fp_op->input(ALICE, 1, __tmp_in_A1, __m_bits, __e_bits) ;
 }
 delete[] __tmp_in_A1 ;
 
-auto kernel1 = make_vector_float(ALICE, 1, 3, 4) ;
+auto kernel1 = make_vector_float(ALICE, 1, 6, 4) ;
 
 if ((__party == ALICE)) {
 cout << ("Input kernel1:") << endl ;
@@ -834,7 +834,7 @@ cout << ("Input kernel1:") << endl ;
 float *__tmp_in_kernel1 = new float[1] ;
 
 for (uint32_t i0 = 0; i0 < 1; i0++){
-for (uint32_t i1 = 0; i1 < 3; i1++){
+for (uint32_t i1 = 0; i1 < 6; i1++){
 for (uint32_t i2 = 0; i2 < 4; i2++){
 if ((__party == ALICE)) {
 cin >> __tmp_in_kernel1[0];
@@ -923,42 +923,7 @@ bias2[i0] = __fp_op->input(ALICE, 1, __tmp_in_bias2, __m_bits, __e_bits) ;
 delete[] __tmp_in_bias2 ;
 
 auto hidden = make_vector_float(ALICE, d1, 4) ;
-
-if ((__party == ALICE)) {
-cout << ("Input hidden:") << endl ;
-
-}
-float *__tmp_in_hidden = new float[1] ;
-
-for (uint32_t i0 = 0; i0 < 1; i0++){
-for (uint32_t i1 = 0; i1 < 4; i1++){
-if ((__party == ALICE)) {
-cin >> __tmp_in_hidden[0];
-}
-hidden[i0][i1] = __fp_op->input(ALICE, 1, __tmp_in_hidden, __m_bits, __e_bits) ;
-
-}
-}
-delete[] __tmp_in_hidden ;
-
 auto cell = make_vector_float(ALICE, d1, 4) ;
-
-if ((__party == ALICE)) {
-cout << ("Input cell:") << endl ;
-
-}
-float *__tmp_in_cell = new float[1] ;
-
-for (uint32_t i0 = 0; i0 < 1; i0++){
-for (uint32_t i1 = 0; i1 < 4; i1++){
-if ((__party == ALICE)) {
-cin >> __tmp_in_cell[0];
-}
-cell[i0][i1] = __fp_op->input(ALICE, 1, __tmp_in_cell, __m_bits, __e_bits) ;
-
-}
-}
-delete[] __tmp_in_cell ;
 
 auto k = make_vector_float(ALICE, 270, 16) ;
 
@@ -1111,7 +1076,7 @@ auto start = clock_start();
 float comm_start = __get_comm() ;
 
 
-for(uint32_t iterations=0; iterations<1; iterations++)
+for(uint32_t iterations=0; iterations<20; iterations++)
 {
     int num_assign=0;
     for (uint32_t ind = 0; ind < num_samples; ind=ind+d1){
@@ -1169,7 +1134,7 @@ for(uint32_t iterations=0; iterations<1; iterations++)
         cout<<endl;
         cout<<endl;
         for (uint32_t i0 = 0; i0 < 1; i0++){
-        for (uint32_t i1 = 0; i1 < 3; i1++){
+        for (uint32_t i1 = 0; i1 < 6; i1++){
         for (uint32_t i2 = 0; i2 < 4; i2++){
         FPArray print_=__fp_op->output(PUBLIC, kernel1[i0][i1][i2]);
         vector<float> f_=print_.get_native_type<float>();

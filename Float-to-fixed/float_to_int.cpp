@@ -74,9 +74,9 @@ int main(int argc, char **argv) {
   //Sample numbers for testing
   // float f_1[]={4.9042821504535347,9.00000001,0,22.0507667243214,-99.6175791042,22.244144885, 88.3889394614,67.5236281643,74.8189688697,4.840235094,11.0652513346,69.1172942636,65.3377424597,74.3603258759,68.8458678959,22.0030407771,39.144387384,93.5312618825,23.5384549711,52.0022613425};
   vector<float> f_1 ;
-  uint32_t num = do_shift(24) ;
+  uint32_t num = 0 ;
   float f ;
-  for (uint64_t i = 0 ; i <= do_shift(8) ; i += 1) {
+  for (uint64_t i = 0 ; i < do_shift(32) ; i += 1) {
     num++ ;
     f = *((float*)&num) ;
 
@@ -87,6 +87,7 @@ int main(int argc, char **argv) {
     
   //Initialization of array with test inputs, the FPArray containing these test inputs (size is set to 20)
   uint64_t sz = (uint64_t)f_1.size() ;
+  cout << "The size = " << sz << endl ;
   FPArray x = fp_op->input<float>(ALICE, sz, &f_1[0], m_bits, e_bits);
   BoolArray x_s, x_z, is_sign, is_greater_than_23, is_greater_than_0;
   FixArray x_m, x_e, check, print_;

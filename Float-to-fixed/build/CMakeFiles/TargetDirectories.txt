@@ -1,0 +1,3 @@
+/home/anwesh/Krithika/Float-to-fixed/build/CMakeFiles/float_to_int.dir
+/home/anwesh/Krithika/Float-to-fixed/build/CMakeFiles/edit_cache.dir
+/home/anwesh/Krithika/Float-to-fixed/build/CMakeFiles/rebuild_cache.dir
