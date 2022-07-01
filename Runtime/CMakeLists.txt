@@ -7,7 +7,7 @@ add_executable(gcnlstm-beacon gcnlstm_run.cpp)
 target_link_libraries(gcnlstm-beacon SCI::SCI-FloatBeacon)
 target_compile_options(gcnlstm-beacon PRIVATE "-w")
 
-add_executable(gcnlstm-floatml gcnlstm_run.cpp)
+add_executable(gcnlstm-floatml gcn_split.cpp)
 target_link_libraries(gcnlstm-floatml SCI::SCI-FloatML)
 target_compile_options(gcnlstm-floatml PRIVATE "-w") 
 
@@ -19,10 +19,10 @@ add_executable(gcnlstm-cin-floatml gcnlstm_cin.cpp)
 target_link_libraries(gcnlstm-cin-floatml SCI::SCI-FloatML)
 target_compile_options(gcnlstm-cin-floatml PRIVATE "-w") 
 
-add_executable(gcnlstm-fixed-beacon gcnlstm_fixed.cpp)
-target_link_libraries(gcnlstm-fixed-beacon SCI::SCI-FloatBeacon)
+add_executable(gcnlstm-fixed-beacon gcnlstm_fixed_adj.cpp)
+target_link_libraries(gcnlstm-fixed-beacon SCI::SCI-FloatML)
 target_compile_options(gcnlstm-fixed-beacon PRIVATE "-w")
 
-add_executable(gcnlstm-fixed-floatml gcnlstm_fixed.cpp)
+add_executable(gcnlstm-fixed-floatml gcnlstm_fixed_variable.cpp)
 target_link_libraries(gcnlstm-fixed-floatml SCI::SCI-FloatBeacon)
 target_compile_options(gcnlstm-fixed-floatml PRIVATE "-w")

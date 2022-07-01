@@ -122,7 +122,7 @@ inFlat[((i1 * s2) + i2)] = inArr[i1][i2] ;
 
 }
 }
-Sigmoid(sz, inFlat, outFlat);
+//Sigmoid(sz, inFlat, outFlat);
 for (uint32_t i1 = 0; i1 < s1; i1++){
 for (uint32_t i2 = 0; i2 < s2; i2++){
 outArr[i1][i2] = outFlat[((i1 * s2) + i2)] ;
