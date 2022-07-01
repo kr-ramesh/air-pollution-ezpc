@@ -1,0 +1,49 @@
+program.use_edabit(True)
+def test(actual):
+    # you can reveal a number in order to print it
+
+    actual = actual.reveal()
+    print_ln('Got %s', actual)
+
+def check1(x1, thres):
+    count=0
+    result=False
+    for i in range(dim):
+        count+=x1[i].if_else(1, 0)
+    return count>thres
+
+def count(x1, x2, ischeck, threshold1, threshold2):
+    resultfinal=0;
+    for i in range(dim):
+        resultfinal+= x2[i].if_else((x1[i]>threshold1).bit_and(x1[i]<threshold2).if_else(1, 0), 0)
+    return resultfinal
+
+dim=270
+thres=2
+t1=3
+t2=5
+       
+grid1 = Array(dim, sint)
+grid2 = Array(dim, sint)
+bool1 = Array(dim, sint)
+bool2 = Array(dim, sint)
+
+@for_range_opt(dim)
+def _(i):
+    grid1[i] = sbitint.get_type(16).get_input_from(0)
+    grid2[i] = sbitint.get_type(16).get_input_from(1)
+
+@for_range_opt(dim)
+def _(i):
+    bool1[i] = sbitint.get_type(16).get_input_from(0)
+    bool2[i] = sbitint.get_type(16).get_input_from(1)
+
+grid = Array(dim, sint)
+clientbool = Array(dim, sint)
+
+for i in range(dim):
+    grid[i]=grid1[i]+grid2[i]
+    clientbool[i]= bool1[i].bit_xor(bool2[i]) #^ bool2[i]
+
+firstcheck=check1(clientbool, thres)
+finalresult=count(grid, clientbool, firstcheck, t1, t2)
