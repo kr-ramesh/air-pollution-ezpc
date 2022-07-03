@@ -515,11 +515,28 @@ auto neighbours2 = make_vector_float(ALICE, d1, d4, d2) ;
 auto finalarr3 = make_vector_float(ALICE, d1, d4, d2) ;
 auto neighbourst2 = make_vector_float(ALICE, d1, d2, d4) ;
 
+auto start = clock_start();
+float comm_start = __get_comm() ;
+
 FixedAdjacencyGraph(d1, d2, d3, d4, features, lastnodes, kernelarr, gcnbias, finalarr, neighbours, reluoutputs1);
 ReverseAssign3(d2, d3, 0, features, feat1);
 ReverseAssign3(d3, d2, 0, neighbours, neigh1);
 
+long long t = time_from(start);
+float comm_end = __get_comm() ;
+cout << "First GCN time:\t" << t / (1000.0) << " ms" << endl;
+cout << "First GCN comms:\t" << (comm_end - comm_start)/(1 << 20) ;
+
+start = clock_start() ;
+comm_start = __get_comm() ;
+
 FixedAdjacencyGraph(d1, d2, d4, d4, finalarr, lastnodes2, kernelarr2, gcnbias2, finalarr2, neighbours2, reluoutputs2);
+
+t = time_from(start) ;
+comm_end = __get_comm() ;
+cout << "Second GCN time:\t" << t / (1000.0) << " ms" << endl;
+cout << "Second GCN comms:\t" << (comm_end - comm_start)/(1 << 20) ;
+
 
 /*
 Transpose3D(d1, d4, d2, neighbours2, neighbourst2);
@@ -1074,8 +1091,8 @@ int total_timesteps=0;
 
 cout<<"Starting neural network!"<<endl;
 
-auto start = clock_start();
-float comm_start = __get_comm() ;
+// auto start = clock_start();
+// float comm_start = __get_comm() ;
 
 
 for(uint32_t iterations=0; iterations<1; iterations++)
@@ -1127,10 +1144,10 @@ for(uint32_t iterations=0; iterations<1; iterations++)
     }
 }
 
-long long t = time_from(start);
-float comm_end = __get_comm() ;
-cout << "Total Time:\t" << t / (1000.0) << " ms" << endl;
-cout << "Total comms:\t" << (comm_end - comm_start)/(1 << 20) ;
+// long long t = time_from(start);
+// float comm_end = __get_comm() ;
+// cout << "Total Time:\t" << t / (1000.0) << " ms" << endl;
+// cout << "Total comms:\t" << (comm_end - comm_start)/(1 << 20) ;
 
 return 0;
 }
