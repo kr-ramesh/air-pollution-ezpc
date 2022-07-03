@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
   // float f_1[]={4.9042821504535347,9.00000001,0,22.0507667243214,-99.6175791042,22.244144885, 88.3889394614,67.5236281643,74.8189688697,4.840235094,11.0652513346,69.1172942636,65.3377424597,74.3603258759,68.8458678959,22.0030407771,39.144387384,93.5312618825,23.5384549711,52.0022613425};
   vector<float> f_1 ;
   uint32_t total = 30*270 ;
-  for (uint32_t i = 0 ; i < 30*270*6 ; i += 1)
+  for (uint32_t i = 0 ; i < total ; i += 1)
     f_1.push_back(rand()) ;
 
   //Initialization of array with test inputs, the FPArray containing these test inputs (size is set to 20)
