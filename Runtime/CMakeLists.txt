@@ -11,6 +11,14 @@ add_executable(gcnlstm-floatml gcn_split.cpp)
 target_link_libraries(gcnlstm-floatml SCI::SCI-FloatML)
 target_compile_options(gcnlstm-floatml PRIVATE "-w") 
 
+add_executable(gcnlstm-nocin-beacon gcnlstm_nocin.cpp)
+target_link_libraries(gcnlstm-nocin-beacon SCI::SCI-FloatBeacon)
+target_compile_options(gcnlstm-nocin-beacon PRIVATE "-w")
+
+add_executable(gcnlstm-nocin-floatml gcnlstm_nocin.cpp)
+target_link_libraries(gcnlstm-nocin-floatml SCI::SCI-FloatML)
+target_compile_options(gcnlstm-nocin-floatml PRIVATE "-w")
+
 add_executable(gcnlstm-cin-beacon gcnlstm_cin.cpp)
 target_link_libraries(gcnlstm-cin-beacon SCI::SCI-FloatBeacon)
 target_compile_options(gcnlstm-cin-beacon PRIVATE "-w")
