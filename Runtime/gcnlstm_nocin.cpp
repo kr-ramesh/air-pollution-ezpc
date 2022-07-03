@@ -525,7 +525,7 @@ ReverseAssign3(d3, d2, 0, neighbours, neigh1);
 long long t = time_from(start);
 float comm_end = __get_comm() ;
 cout << "First GCN time:\t" << t / (1000.0) << " ms" << endl;
-cout << "First GCN comms:\t" << (comm_end - comm_start)/(1 << 20) ;
+cout << "First GCN comms:\t" << (comm_end - comm_start)/(1 << 20) << endl ;
 
 start = clock_start() ;
 comm_start = __get_comm() ;
@@ -534,8 +534,8 @@ FixedAdjacencyGraph(d1, d2, d4, d4, finalarr, lastnodes2, kernelarr2, gcnbias2, 
 
 t = time_from(start) ;
 comm_end = __get_comm() ;
-cout << "Second GCN time:\t" << t / (1000.0) << " ms" << endl;
-cout << "Second GCN comms:\t" << (comm_end - comm_start)/(1 << 20) ;
+cout << "\nSecond GCN time:\t" << t / (1000.0) << " ms" << endl;
+cout << "Second GCN comms:\t" << (comm_end - comm_start)/(1 << 20) << endl ;
 
 
 /*
