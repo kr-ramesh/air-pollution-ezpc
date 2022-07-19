@@ -210,11 +210,14 @@ vArrFlat[((i1 * s2) + i2)]= vArr[i1][i2];
 mArrFlat[((i1 * s2) + i2)]= mArr[i1][i2];
 }
 }
+
 updateWeightsAdam(sz, t, lr, beta1, beta2, eps, weightFlat, derFlat, mArrFlat, vArrFlat);
+
 for (uint32_t i1 = 0; i1 < s1; i1++){
 for (uint32_t i2 = 0; i2 < s2; i2++){
 weight[i1][i2] = weightFlat[((i1 * s2) + i2)] ;
-
+mArr[i1][i2] = mArrFlat[i1*s2 + i2] ;
+vArr[i1][i2] = vArrFlat[i1*s2 + i2] ;
 }
 }
 }
@@ -370,7 +373,6 @@ hotArr[i1][i2][i3] = hotFlat[i1*s2*s3 + i2*s3 + i3] ;
 }
 
 
-
 void AssignSampleFromData3D(int32_t s0, int32_t s1, int32_t s2, int32_t index, auto& arr1, auto& arr2){
 for (uint32_t k = 0; k < s0; k++){    
 for (uint32_t l = 0; l < s1; l++){
@@ -396,12 +398,14 @@ auto featurest = make_vector_float(ALICE, d1, d3, d2) ;
 auto neighbourst = make_vector_float(ALICE, d1, d2, d3) ;
 auto outputarr = make_vector_float(ALICE, d1, d2, d4) ;
 auto ht = make_vector_bool(ALICE, d1, d2, d4) ;
+
 Transpose3D(d1, d2, d3, features, featurest);
 MatMul3(d1, d3, d2, d2, featurest, lastnodes, neighbours);
 Transpose3D(d1, d3, d2, neighbours, neighbourst);
 MatMul3(d1, d2, d3, d4, neighbourst, kernelarr, outputarr);
 GemmAdd3(d1, d2, d4, outputarr, bias, outputarr);
 Relu3(d1, d2, d4, outputarr, finalarr, ht);
+
 reluoutputs = ht[0] ;
 }
 
@@ -519,7 +523,6 @@ FixedAdjacencyGraph(d1, d2, d3, d4, features, lastnodes, kernelarr, gcnbias, fin
 ReverseAssign3(d2, d3, 0, features, feat1);
 ReverseAssign3(d3, d2, 0, neighbours, neigh1);
 
-
 FixedAdjacencyGraph(d1, d2, d4, d4, finalarr, lastnodes2, kernelarr2, gcnbias2, finalarr2, neighbours2, reluoutputs2);
 Transpose3D(d1, d4, d2, neighbours2, neighbourst2);
 ReverseAssign3(d2, d4, 0, neighbourst2, neight2);
@@ -536,8 +539,7 @@ Sigmoid2(dim1, d2, finaloutput, finaloutput);
 }
 
 
-void backward(int32_t d1, int32_t d2, int32_t gcn1dim3, int32_t gcn2dim3, int32_t hdim, int32_t hdim4, int32_t totaltimesteps, auto& layer1W, auto& layer1b, auto& hiddenstates, auto& TotalIt, auto& TotalFt, auto& TotalGt, auto& TotalOt, auto& TotalCt, auto& TotalXt, auto& batchSoft, auto& lab, auto& Fil, auto& RecFil, auto& LSTMBias, auto& neighbourst2, auto& kernel2, auto& features2, auto& A2, auto& neighbours1, auto& kernel1, auto& features1, auto& A1, auto& bias1, auto& bias2, auto& reluoutputs1,auto& reluoutputs2,auto& m1,auto& v1,auto& m2,auto& v2,auto& m3,auto& v3,auto& m4,auto& v4,auto& m5,auto& v5,auto& m6,auto& v6,auto& m7,auto& v7,auto& m8,auto& v8,auto& m9,auto& v9,auto& m10,auto& v10,auto& m11,auto& v11, int32_t total_t){
-
+void backward(int32_t d1, int32_t d2, int32_t gcn1dim3, int32_t gcn2dim3, int32_t hdim, int32_t hdim4, int32_t totaltimesteps, auto& layer1W, auto& layer1b, auto& hiddenstates, auto& TotalIt, auto& TotalFt, auto& TotalGt, auto& TotalOt, auto& TotalCt, auto& TotalXt, auto& batchSoft, auto& lab, auto& Fil, auto& RecFil, auto& LSTMBias, auto& neighbourst2, auto& kernel2, auto& features2, auto& A2, auto& neighbours1, auto& kernel1, auto& features1, auto& A1, auto& bias1, auto& bias2, auto& reluoutputs1,auto& reluoutputs2,auto& m1,auto& v1,auto& m2,auto& v2,auto& m3,auto& v3,auto& m4,auto& v4,auto& m5,auto& v5,auto& m6,auto& v6,auto& m7,auto& v7,auto& m8,auto& v8,auto& m9,auto& v9,auto& m10,auto& v10,auto& m11,auto& v11, int32_t total_t) {
 
 auto layer1Der = make_vector_float(ALICE, d1, d2) ;
 auto dh = make_vector_float(ALICE, d1, hdim) ;
@@ -728,7 +730,6 @@ getBiasDer(d2, totaltimesteps, DX, dbias1);
 MatMul(gcn2dim3, totaltimesteps, d2, kernelarr2, DXTranspose, dneighbours2);
 MatMul(d2, gcn2dim3, d2, features2, dneighbours2, dLastnodes2);
 MatMul(gcn2dim3, d2, d2, dneighbours2, lastnodes2, dfeatures2t);
-
 
 Transpose2D(d2, gcn2dim3, reluoutputs1, reluoutputs1t);
 IfElse2(gcn2dim3, d2, dfeatures2t, reluoutputs1t, dfeatures2t, true);
@@ -1067,14 +1068,12 @@ auto v10 = make_vector_float(ALICE, hdim, d2) ;
 auto m11 = make_vector_float(ALICE, d2) ;
 auto v11 = make_vector_float(ALICE, d2) ;
 
-
 int total_timesteps=0;
 
 cout<<"Starting neural network!"<<endl;
 
 auto start = clock_start();
 float comm_start = __get_comm() ;
-
 
 for(uint32_t iterations=0; iterations<20; iterations++)
 {
