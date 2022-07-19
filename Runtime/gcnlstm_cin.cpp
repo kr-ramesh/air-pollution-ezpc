@@ -739,18 +739,19 @@ MatMul(gcn1dim3, d2, gcn2dim3, neighbours1, dfeatures2, dkernelarr);
 MatMul(gcn1dim3, gcn2dim3, d2, kernelarr, dfeatures2t, dneighbours1);
 MatMul(d2, gcn1dim3, d2, features1, dneighbours1, dLastnodes1);
 
+float learnrate = 0.01 ;
 
-updateWeightsAdam2(gcn1dim3, gcn2dim3, total_t, 0.001, 0.999, 0.999, 1e-7, kernelarr, dkernelarr, m1, v1);
-updateWeightsAdam2(totaltimesteps, gcn2dim3, total_t, 0.001, 0.999, 0.999, 1e-7, kernelarr2, dkernelarr2, m2, v2);
-updateWeightsAdam2(d2, d2, total_t, 0.001, 0.999, 0.999, 1e-7, dLastnodes1, lastnodes, m3, v3);
-updateWeightsAdam2(d2, d2, total_t, 0.001, 0.999, 0.999, 1e-7, dLastnodes2, lastnodes2, m4, v4);
-updateWeightsAdam(d2, total_t, 0.001, 0.999, 0.999, 1e-7, dbias1, bias1, m5, v5);
-updateWeightsAdam(d2, total_t, 0.001, 0.999, 0.999, 1e-7, dbias2, bias2, v6, v6);
-updateWeightsAdam2(d2, hdim4, total_t, 0.001, 0.999, 0.999, 1e-7, Fil, DFilSum, m7, v7);
-updateWeightsAdam2(hdim, hdim4, total_t, 0.001, 0.999, 0.999, 1e-7, RecFil, DRecFilSum, m8, v8);
-updateWeightsAdam(hdim4, total_t, 0.001, 0.999, 0.999, 1e-7, LSTMBias, DBiasSum, m9, v9);
-updateWeightsAdam2(hdim, total_t, d2, 0.001, 0.999, 0.99, 1e-7, layer1W, layer1WDerReshaped, m10, v10);
-updateWeightsAdam(d2, total_t, 0.001, 0.999, 0.999, 1e-7, layer1b, layer1bDer, m11, v11);
+updateWeightsAdam2(gcn1dim3, gcn2dim3, total_t, learnrate, 0.999, 0.999, 1e-7, kernelarr, dkernelarr, m1, v1);
+updateWeightsAdam2(totaltimesteps, gcn2dim3, total_t, learnrate, 0.999, 0.999, 1e-7, kernelarr2, dkernelarr2, m2, v2);
+updateWeightsAdam2(d2, d2, total_t, learnrate, 0.999, 0.999, 1e-7, dLastnodes1, lastnodes, m3, v3);
+updateWeightsAdam2(d2, d2, total_t, learnrate, 0.999, 0.999, 1e-7, dLastnodes2, lastnodes2, m4, v4);
+updateWeightsAdam(d2, total_t, learnrate, 0.999, 0.999, 1e-7, dbias1, bias1, m5, v5);
+updateWeightsAdam(d2, total_t, learnrate, 0.999, 0.999, 1e-7, dbias2, bias2, v6, v6);
+updateWeightsAdam2(d2, hdim4, total_t, learnrate, 0.999, 0.999, 1e-7, Fil, DFilSum, m7, v7);
+updateWeightsAdam2(hdim, hdim4, total_t, learnrate, 0.999, 0.999, 1e-7, RecFil, DRecFilSum, m8, v8);
+updateWeightsAdam(hdim4, total_t, learnrate, 0.999, 0.999, 1e-7, LSTMBias, DBiasSum, m9, v9);
+updateWeightsAdam2(hdim, total_t, d2, learnrate, 0.999, 0.99, 1e-7, layer1W, layer1WDerReshaped, m10, v10);
+updateWeightsAdam(d2, total_t, learnrate, 0.999, 0.999, 1e-7, layer1b, layer1bDer, m11, v11);
 
 }
 
@@ -1119,6 +1120,7 @@ for(uint32_t iterations=0; iterations<20; iterations++)
         total_timesteps+=1;
         backward(num_assign, d2, d3, 4, 4, gatesdim, 4, dense, bias4, FullHt, FullIt, FullFt, FullGt, FullOt, FullCt, FullXt, finaloutput, labels, k, reck, lstmbias, neight2, kernel2, feat2, A2, neigh1, kernel1, feat1, A2, bias1, bias2, reluoutputs1, reluoutputs2, m1, v1, m2, v2, m3, v3, m4, v4, m5, v5, m6, v6, m7, v7, m8, v8, m9, v9, m10, v10, m11, v11, total_timesteps);
     }
+
     if((iterations+1)%5==0)
     {
         for (uint32_t i0 = 0; i0 < 1; i0++){
