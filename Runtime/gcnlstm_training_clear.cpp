@@ -79,6 +79,25 @@ extern void computeMSELoss(int32_t m, int32_t s, auto& target, auto& fwdOut, aut
 // }
 // }
 
+void Additive1D(int32_t d1, auto& arr1, auto& arr2, auto& arr3){
+for (uint32_t j = 0; j < d1; j++){
+float __tac_var49 = arr2[j] ;
+float __tac_var50 = arr1[j] ;
+arr3[j]= (__tac_var49 + __tac_var50) ;
+}
+}
+
+//ElemWiseAdd
+void Additive2D(int32_t d1, int32_t d2, auto& arr1, auto& arr2, auto& arr3){
+for (uint32_t j = 0; j < d1; j++){
+for (uint32_t k = 0; k < d2; k++){
+float __tac_var49 = arr2[j][k] ;
+float __tac_var50 = arr1[j][k] ;
+arr3[j][k] = (__tac_var49 + __tac_var50) ;
+}
+}
+}
+
 void getSoftDer(int32_t s1, int32_t s2,auto& lab,  auto& batchSoft, auto& der){
 for (uint32_t i1 = 0; i1 < s1; i1++){
 for (uint32_t i2 = 0; i2 < s2; i2++){
@@ -160,14 +179,39 @@ for (uint32_t i3 = 0; i3 < s3; i3++){
 float __tac_var19 = prod[i1][i2][i3] ;
 
 float __tac_var20 = bias[i2] ;
-
 out[i1][i2][i3] = (__tac_var19 + __tac_var20) ;
+}
+}
+}
+}
+/*
+void GemmAdd3(int32_t s1, int32_t s2, int32_t s3, auto& inArr, auto& bias, auto& outArr) {
 
-}
-}
-}
-}
+	int sz = s1*s2*s3 ;
 
+	auto arr1 = make_vector<float>(sz) ;
+	auto arr2 = make_vector<float>(sz) ;
+	auto out = make_vector<float>(sz) ;
+
+	for (int i1=0, k=0 ; i1 < s1 ; i1++) {
+		for (int i2 = 0 ; i2 < s2 ; i2++) {
+			for (int i3 = 0 ; i3 < s3 ; i3++, k++) {
+				arr1[k] = inArr[i1][i2][i3] ;
+				arr2[k] = bias[i2] ;				
+			}
+		}
+	}
+
+	Additive1D(sz, arr1, arr2, out) ;
+
+	for (int i1 = 0, k = 0 ; i1 < s1 ; i1++) {
+		for (int i2 = 0 ; i2 < s2 ; i2++) {
+			for (int i3 = 0 ; i3 < s3 ; i3++, k++) {
+				outArr[i1][i2][i3] = out[k] ;	
+			}			
+		}
+	}
+}*/
 void SubtractOne(int32_t d1, int32_t d2, auto& arr1, auto& arr2){
 for (uint32_t j = 0; j < d1; j++){
 for (uint32_t k = 0; k < d2; k++){
@@ -408,7 +452,7 @@ arr2[l][j] = arr1[s3][l][j] ;
 }
 }
 }
-
+/*
 void MatMul3(int32_t d1, int32_t d2, int32_t d3, int32_t d4, auto& arr1, auto& arr2, auto& arr3){
 auto a1 = make_vector<float>(d2, d3) ;
 auto a2 = make_vector<float>(d3, d4) ;
@@ -421,16 +465,29 @@ MatMul(d2, d3, d4, a1, a2, a3) ;
 Assign3(d2, d4, i0, a3, arr3) ;
 }
 }
+*/
 
-//ElemWiseAdd
-void Additive2D(int32_t d1, int32_t d2, auto& arr1, auto& arr2, auto& arr3){
-for (uint32_t j = 0; j < d1; j++){
-for (uint32_t k = 0; k < d2; k++){
-float __tac_var49 = arr2[j][k] ;
-float __tac_var50 = arr1[j][k] ;
-arr3[j][k] = (__tac_var49 + __tac_var50) ;
-}
-}
+void MatMul3(int32_t d1, int32_t d2, int32_t d3, int32_t d4, auto& arr1, auto& arr2, auto& arr3) {
+	auto mat1 = make_vector<float>(d1*d2, d3) ;
+	auto matout = make_vector<float>(d1*d2, d4) ;
+
+	for (int i1 = 0 ; i1 < d1 ; i1++) {
+		for (int i2 = 0 ; i2 < d2 ; i2++) {
+			for (int i3 = 0 ; i3 < d3 ; i3++) {
+				mat1[i1*d2+i2][i3] = arr1[i1][i2][i3] ;
+			}
+		}
+	}
+
+	MatMul(d1*d2, d3, d4, mat1, arr2[0], matout) ;
+
+	for (int i1 = 0 ; i1 < d1 ; i1++) {
+		for (int i2 = 0 ; i2 < d2 ; i2++) {
+			for (int i4 = 0 ; i4 < d4 ; i4++) {
+				arr3[i1][i2][i4] = matout[i1*d2+i2][i4] ;
+			}
+		}
+	}
 }
 
 //GemmAdd
@@ -887,11 +944,11 @@ inp[i0][i1][i2] = __tmp_in_inp[0] ;
 delete[] __tmp_in_inp ;
 
 
-auto A1 = make_vector<float>(d1, d2, d2) ;
+auto A1 = make_vector<float>(1, d2, d2) ;
 cout << ("Input A1:") << endl ;
 float *__tmp_in_A1 = new float[1] ;
 
-for (uint32_t i0 = 0; i0 < d1; i0++){
+for (uint32_t i0 = 0; i0 < 1; i0++){
 for (uint32_t i1 = 0; i1 < d2; i1++){
 for (uint32_t i2 = 0; i2 < d2; i2++){
 cin >> __tmp_in_A1[0];
@@ -932,13 +989,13 @@ bias1[i0] = __tmp_in_bias1[0] ;
 }
 delete[] __tmp_in_bias1 ;
 
-auto A2 = make_vector<float>(d1, d2, d2) ;
+auto A2 = make_vector<float>(1, d2, d2) ;
 
 cout << ("Input A2:") << endl ;
 
 float *__tmp_in_A2 = new float[1] ;
 
-for (uint32_t i0 = 0; i0 < d1; i0++){
+for (uint32_t i0 = 0; i0 < 1; i0++){
 for (uint32_t i1 = 0; i1 < d2; i1++){
 for (uint32_t i2 = 0; i2 < d2; i2++){
 cin >> __tmp_in_A2[0];
@@ -1160,6 +1217,87 @@ for(uint32_t iterations=0; iterations<20; iterations++)
         cout<<"BACKWARD"<<endl;
         total_timesteps+=1;
         backward(num_assign, d2, d3, 4, 4, gatesdim, 4, dense, bias4, FullHt, FullIt, FullFt, FullGt, FullOt, FullCt, FullXt, finaloutput, labels, k, reck, lstmbias, neight2, kernel2, feat2, A2, neigh1, kernel1, feat1, A2, bias1, bias2, reluoutputs1, reluoutputs2, m1, v1, m2, v2, m3, v3, m4, v4, m5, v5, m6, v6, m7, v7, m8, v8, m9, v9, m10, v10, m11, v11, total_timesteps, lr);
+    }
+    if((iterations+1)%5==0)
+    {
+        for (uint32_t i0 = 0; i0 < 1; i0++){
+        for (uint32_t i1 = 0; i1 < 270; i1++){
+        for (uint32_t i2 = 0; i2 < 270; i2++){
+        cout<<A1[i0][i1][i2]<<" ";
+        }
+        }
+        }
+        cout<<endl;
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 < 1; i0++){
+        for (uint32_t i1 = 0; i1 < 6; i1++){
+        for (uint32_t i2 = 0; i2 < 4; i2++){
+        cout<<kernel1[i0][i1][i2]<<" ";
+        }
+        }
+        }
+        cout<<endl;
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 < 270; i0++){
+        cout<<bias1[i0]<<" ";
+        }
+
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 < 1; i0++){
+        for (uint32_t i1 = 0; i1 < 270; i1++){
+        for (uint32_t i2 = 0; i2 < 270; i2++){
+        cout<<A2[i0][i1][i2]<<" ";
+        }
+        }
+        }
+        cout<<endl;
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 < 1; i0++){
+        for (uint32_t i1 = 0; i1 < 4; i1++){
+        for (uint32_t i2 = 0; i2 < 4; i2++){
+        cout<<kernel2[i0][i1][i2]<<" ";
+        }
+        }
+        }
+        cout<<endl;
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 < 270; i0++){
+        cout<< bias2[i0]<<" ";
+        }
+
+        cout<<endl;
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 < 270; i0++){
+        for (uint32_t i1 = 0; i1 < 16; i1++){
+        cout<<k[i0][i1]<<" ";
+        }
+        }
+        cout<<endl;
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 <4; i0++){
+        for (uint32_t i1 = 0; i1 < 16; i1++){
+        cout<<reck[i0][i1]<<" ";
+        }
+        }
+        cout<<endl;
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 < 16; i0++){
+        cout<<lstmbias[i0]<<" ";
+        }
+        cout<<endl;
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 < 270; i0++){
+        cout<<bias4[i0]<<" ";
+        }
+        cout<<endl;
+        cout<<endl;
+        for (uint32_t i0 = 0; i0 < 4; i0++){
+        for (uint32_t i1 = 0; i1 < 270; i1++){
+        cout<<dense[i0][i1]<<" ";
+        }
+        }
+        cout<<endl;
+        cout<<endl;
     }
 }
 }
