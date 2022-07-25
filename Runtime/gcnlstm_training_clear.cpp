@@ -575,6 +575,9 @@ for (uint32_t j = 0; j < dim3; j++) {
 }
 }
 GemmAdd(dim1, dim3, Z, Bias, Z);
+
+
+
 for (uint32_t i = 0; i < dim1; i++){
 for (uint32_t j = 0; j < hiddendim; j++){
 I[i][j] = Z[i][j] ;
@@ -652,7 +655,6 @@ auto neighbourst2 = make_vector<float>(d1, d2, d4) ;
 FixedAdjacencyGraph(d1, d2, d3, d4, features, lastnodes, kernelarr, gcnbias, finalarr, neighbours, reluoutputs1);
 ReverseAssign3(d2, d3, 0, features, feat1);
 ReverseAssign3(d3, d2, 0, neighbours, neigh1);
-
 FixedAdjacencyGraph(d1, d2, d4, d4, finalarr, lastnodes2, kernelarr2, gcnbias2, finalarr2, neighbours2, reluoutputs2);
 Transpose(d1, d4, d2, neighbours2, neighbourst2);
 ReverseAssign3(d2, d4, 0, neighbourst2, neight2);
@@ -660,6 +662,7 @@ ReverseAssign3(d2, d4, 0, finalarr, feat2);
 Transpose(d1, d2, d4, finalarr2, finalarr3);
 
 Assign3(d1, hdim, 0, cellstates, FullCt);
+
 LSTM3D(unitstotal, idim, hdim, dim1, dim3, finalarr3, hstates, cellstates, lstmkernel, reclstmkernel, lstmbias, FullHt, FullIt, FullFt, FullGt, FullOt, FullCt, FullXt);
 Assign3(d1, hdim, d4, hstates, FullHt);
 
@@ -876,13 +879,23 @@ MatMul(d2, gcn2dim3, d2, features2, dneighbours2, dLastnodes2);
 MatMul(gcn2dim3, d2, d2, dneighbours2, lastnodes2, dfeatures2t);
 
 Transpose2D(d2, gcn2dim3, reluoutputs1, reluoutputs1t);
+/*
+for(int i=0;i<4; i++)
+cout<<layerFinalHidden[0][i]<<" ";
+cout<<endl<<endl;
+
+for(int i=0;i<d2; i++)
+cout<<layer1WDerReshaped[0][i]<<" ";
+cout<<endl<<endl;*/
 ElemProd(gcn2dim3, d2, dfeatures2t, reluoutputs1t, dfeatures2t);
+/*for(int i=0;i<4; i++)
+cout<<dfeatures2t[0][i]<<" "<<endl;
+cout<<endl;*/
 getBiasDer(gcn2dim3, d2, dfeatures2t, dbias2);
 Transpose2D(gcn2dim3, d2, dfeatures2t, dfeatures2);
 MatMul(gcn1dim3, d2, gcn2dim3, neighbours1, dfeatures2, dkernelarr);
 MatMul(gcn1dim3, gcn2dim3, d2, kernelarr, dfeatures2t, dneighbours1);
 MatMul(d2, gcn1dim3, d2, features1, dneighbours1, dLastnodes1);
-
 updateWeightsAdam2(gcn1dim3, gcn2dim3, total_t, learnrate, 0.999, 0.999, 1e-7, kernelarr, dkernelarr, m1, v1);
 updateWeightsAdam2(totaltimesteps, gcn2dim3, total_t, learnrate, 0.999, 0.999, 1e-7, kernelarr2, dkernelarr2, m2, v2);
 updateWeightsAdam2(d2, d2, total_t, learnrate, 0.999, 0.999, 1e-7, dLastnodes1, lastnodes, m3, v3);
@@ -920,7 +933,8 @@ index++;
 
 int main (int __argc, char **__argv) {
 
-float lr= 0.001;
+float lr= atof(__argv[1]);
+int32_t num_iterations = atoi(__argv[2]);
 int32_t num_samples=30;
 int32_t d1 = 19 ;
 int32_t d2 = 270 ;
@@ -930,7 +944,7 @@ int32_t hdim = 4 ;
 int32_t gatesdim = d4*4;
 
 auto inp = make_vector<float>(num_samples, d2, d3) ;
-cout << ("Input inp:") << endl ;
+//cout << ("Input inp:") << endl ;
 float *__tmp_in_inp = new float[1] ;
 for (uint32_t i0 = 0; i0 < num_samples; i0++){
 for (uint32_t i1 = 0; i1 < d2; i1++){
@@ -945,7 +959,7 @@ delete[] __tmp_in_inp ;
 
 
 auto A1 = make_vector<float>(1, d2, d2) ;
-cout << ("Input A1:") << endl ;
+//cout << ("Input A1:") << endl ;
 float *__tmp_in_A1 = new float[1] ;
 
 for (uint32_t i0 = 0; i0 < 1; i0++){
@@ -959,13 +973,13 @@ A1[i0][i1][i2] = __tmp_in_A1[0] ;
 }
 delete[] __tmp_in_A1 ;
 
-auto kernel1 = make_vector<float>(d1, d3, d4) ;
+auto kernel1 = make_vector<float>(1, d3, d4) ;
 
-cout << ("Input kernel1:") << endl ;
+//cout << ("Input kernel1:") << endl ;
 
 float *__tmp_in_kernel1 = new float[1] ;
 
-for (uint32_t i0 = 0; i0 < d1; i0++){
+for (uint32_t i0 = 0; i0 < 1; i0++){
 for (uint32_t i1 = 0; i1 < d3; i1++){
 for (uint32_t i2 = 0; i2 < d4; i2++){
 cin >> __tmp_in_kernel1[0];
@@ -978,7 +992,7 @@ delete[] __tmp_in_kernel1 ;
 
 auto bias1 = make_vector<float>(d2) ;
 
-cout << ("Input bias1:") << endl ;
+//cout << ("Input bias1:") << endl ;
 
 float *__tmp_in_bias1 = new float[1] ;
 
@@ -991,7 +1005,7 @@ delete[] __tmp_in_bias1 ;
 
 auto A2 = make_vector<float>(1, d2, d2) ;
 
-cout << ("Input A2:") << endl ;
+//cout << ("Input A2:") << endl ;
 
 float *__tmp_in_A2 = new float[1] ;
 
@@ -1006,13 +1020,13 @@ A2[i0][i1][i2] = __tmp_in_A2[0] ;
 }
 delete[] __tmp_in_A2 ;
 
-auto kernel2 = make_vector<float>(d1, d4, d4) ;
+auto kernel2 = make_vector<float>(1, d4, d4) ;
 
-cout << ("Input kernel2:") << endl ;
+//cout << ("Input kernel2:") << endl ;
 
 float *__tmp_in_kernel2 = new float[1] ;
 
-for (uint32_t i0 = 0; i0 < d1; i0++){
+for (uint32_t i0 = 0; i0 < 1; i0++){
 for (uint32_t i1 = 0; i1 < d4; i1++){
 for (uint32_t i2 = 0; i2 < d4; i2++){
 cin >> __tmp_in_kernel2[0];
@@ -1025,7 +1039,7 @@ delete[] __tmp_in_kernel2 ;
 
 auto bias2 = make_vector<float>(d2) ;
 
-cout << ("Input bias2:") << endl ;
+//cout << ("Input bias2:") << endl ;
 
 float *__tmp_in_bias2 = new float[1] ;
 
@@ -1038,8 +1052,8 @@ delete[] __tmp_in_bias2 ;
 
 auto hidden = make_vector<float>(d1, d4) ;
 
-cout << ("Input hidden:") << endl ;
-
+//cout << ("Input hidden:") << endl ;
+/*
 float *__tmp_in_hidden = new float[1] ;
 
 for (uint32_t i0 = 0; i0 < d1; i0++){
@@ -1049,12 +1063,12 @@ hidden[i0][i1] = __tmp_in_hidden[0] ;
 
 }
 }
-delete[] __tmp_in_hidden ;
+delete[] __tmp_in_hidden ;*/
 
 auto cell = make_vector<float>(d1, d4) ;
 
-cout << ("Input cell:") << endl ;
-
+//cout << ("Input cell:") << endl ;
+/*
 float *__tmp_in_cell = new float[1] ;
 
 for (uint32_t i0 = 0; i0 < d1; i0++){
@@ -1064,11 +1078,11 @@ cell[i0][i1] = __tmp_in_cell[0] ;
 
 }
 }
-delete[] __tmp_in_cell ;
+delete[] __tmp_in_cell ;*/
 
 auto k = make_vector<float>(d2, gatesdim) ;
 
-cout << ("Input k:") << endl ;
+//cout << ("Input k:") << endl ;
 
 float *__tmp_in_k = new float[1] ;
 
@@ -1082,7 +1096,7 @@ k[i0][i1] = __tmp_in_k[0] ;
 
 auto reck = make_vector<float>(d4, gatesdim) ;
 
-cout << ("Input reck:") << endl ;
+//cout << ("Input reck:") << endl ;
 
 float *__tmp_in_reck = new float[1] ;
 
@@ -1096,7 +1110,7 @@ reck[i0][i1] = __tmp_in_reck[0] ;
 
 auto lstmbias = make_vector<float>(gatesdim) ;
 
-cout << ("Input lstmbias:") << endl ;
+//cout << ("Input lstmbias:") << endl ;
 
 float *__tmp_in_lstmbias = new float[1] ;
 
@@ -1114,7 +1128,7 @@ delete[] __tmp_in_lstmbias ;
 
 auto dense = make_vector<float>(d4, d2) ;
 
-cout << ("Input dense:") << endl ;
+////cout << ("Input dense:") << endl ;
 
 float *__tmp_in_dense = new float[1] ;
 
@@ -1129,7 +1143,7 @@ delete[] __tmp_in_dense ;
 
 auto bias4 = make_vector<float>(d2) ;
 
-cout << ("Input bias4:") << endl ;
+//cout << ("Input bias4:") << endl ;
 
 float *__tmp_in_bias4 = new float[1] ;
 
@@ -1140,7 +1154,7 @@ bias4[i0] = __tmp_in_bias4[0] ;
 }
 auto labs = make_vector<float>(num_samples, d2) ;
 
-cout << ("Input labs:") << endl ;
+//cout << ("Input labs:") << endl ;
 
 for (uint32_t i1 = 0; i1 < num_samples; i1++){
 for (uint32_t i0 = 0; i0 < d2; i0++){
@@ -1181,19 +1195,23 @@ auto v10 = make_vector<float>(hdim, d2) ;
 auto m11 = make_vector<float>(d2) ;
 auto v11 = make_vector<float>(d2) ;
 
+ofstream outdata;
+
 int total_timesteps=0;
 
-cout<<"Starting neural network!"<<endl;
+//cout<<"Starting neural network!"<<endl;
 
-for(uint32_t iterations=0; iterations<20; iterations++)
+for(uint32_t iterations=0; iterations<num_iterations; iterations++)
 {
     int num_assign=0;
     for (uint32_t ind = 0; ind < num_samples; ind=ind+d1){
+        //cout<<"semi iteration "<<iterations<<endl;
         if(num_samples-ind<d1)
         num_assign=num_samples-ind;
         else
         num_assign=d1;
-
+        hidden = make_vector<float>(d1, d4) ;
+        cell = make_vector<float>(d1, d4) ;
         auto FullHt = make_vector<float>((d4 + 1), num_assign, d4) ;
         auto FullIt = make_vector<float>(d4, num_assign, d4) ;
         auto FullFt = make_vector<float>(d4, num_assign, d4) ;
@@ -1205,20 +1223,19 @@ for(uint32_t iterations=0; iterations<20; iterations++)
         auto labels = make_vector<float>(num_assign, d2) ;
         auto finaloutput = make_vector<float>(num_assign, d2) ;
         
-
-        cout<<"Assignment"<<endl;
+        //cout<<"Assignment"<<endl;
         AssignSampleFromData3D(num_assign, d2, d3, ind, inp, inputpoint);
-        cout<<"Second Assignment"<<endl;
+        //cout<<"Second Assignment"<<endl;
         AssignSampleFromData2D(num_assign, d2, ind, labs, labels);
 
-        cout<<"FORWARD"<<endl;
+        //cout<<"FORWARD"<<endl;
         forward(num_assign, d2, d3, d4, inputpoint, A1, kernel1, bias1, A2, kernel2, bias2, d4, d2, hdim, num_assign, gatesdim, hidden, cell, k, reck, lstmbias, dense, bias4, FullHt, FullIt, FullFt, FullGt, FullOt, FullCt, FullXt, neight2, feat2, neigh1, feat1, reluoutputs1, reluoutputs2, finaloutput);
         //computeLoss(d1, d2, labels, finaloutput);
-        cout<<"BACKWARD"<<endl;
+        //cout<<"BACKWARD"<<endl;
         total_timesteps+=1;
         backward(num_assign, d2, d3, 4, 4, gatesdim, 4, dense, bias4, FullHt, FullIt, FullFt, FullGt, FullOt, FullCt, FullXt, finaloutput, labels, k, reck, lstmbias, neight2, kernel2, feat2, A2, neigh1, kernel1, feat1, A2, bias1, bias2, reluoutputs1, reluoutputs2, m1, v1, m2, v2, m3, v3, m4, v4, m5, v5, m6, v6, m7, v7, m8, v8, m9, v9, m10, v10, m11, v11, total_timesteps, lr);
     }
-    if((iterations+1)%5==0)
+    if((iterations+1)%1==0)
     {
         for (uint32_t i0 = 0; i0 < 1; i0++){
         for (uint32_t i1 = 0; i1 < 270; i1++){
@@ -1300,4 +1317,93 @@ for(uint32_t iterations=0; iterations<20; iterations++)
         cout<<endl;
     }
 }
+
+outdata.open("../Weights/A1.txt"); // opens the file
+for (uint32_t i0 = 0; i0 < 1; i0++){
+for (uint32_t i1 = 0; i1 < 270; i1++){
+for (uint32_t i2 = 0; i2 < 270; i2++){
+outdata <<A1[i0][i1][i2]<< endl;
+}
+}
+}
+outdata.close();
+
+outdata.open("../Weights/kernel1.txt"); // opens the file
+for (uint32_t i0 = 0; i0 < 1; i0++){
+for (uint32_t i1 = 0; i1 < 6; i1++){
+for (uint32_t i2 = 0; i2 < 4; i2++){
+outdata <<kernel1[i0][i1][i2]<< endl;
+}
+}
+}
+outdata.close();
+
+outdata.open("../Weights/bias1.txt");
+for (uint32_t i0 = 0; i0 < 270; i0++){
+outdata <<bias1[i0]<< endl;
+}
+outdata.close();
+
+outdata.open("../Weights/A2.txt");
+for (uint32_t i0 = 0; i0 < 1; i0++){
+for (uint32_t i1 = 0; i1 < 270; i1++){
+for (uint32_t i2 = 0; i2 < 270; i2++){
+outdata <<A2[i0][i1][i2]<< endl;
+}
+}
+}
+outdata.close();
+
+outdata.open("../Weights/kernel2.txt");
+for (uint32_t i0 = 0; i0 < 1; i0++){
+for (uint32_t i1 = 0; i1 < 4; i1++){
+for (uint32_t i2 = 0; i2 < 4; i2++){
+outdata <<kernel2[i0][i1][i2]<< endl;
+}
+}
+}
+outdata.close();
+
+outdata.open("../Weights/bias2.txt");
+for (uint32_t i0 = 0; i0 < 270; i0++){
+outdata <<bias2[i0]<< endl;
+}
+outdata.close();
+
+outdata.open("../Weights/k.txt");
+for (uint32_t i0 = 0; i0 < 270; i0++){
+for (uint32_t i1 = 0; i1 < 16; i1++){
+outdata <<k[i0][i1]<< endl;
+}
+}
+outdata.close();
+
+outdata.open("../Weights/reck.txt");
+for (uint32_t i0 = 0; i0 <4; i0++){
+for (uint32_t i1 = 0; i1 < 16; i1++){
+outdata <<reck[i0][i1]<< endl;
+}
+}
+outdata.close();
+
+outdata.open("../Weights/lstmbias.txt");
+for (uint32_t i0 = 0; i0 < 16; i0++){
+outdata <<lstmbias[i0]<< endl;
+}
+outdata.close();
+
+outdata.open("../Weights/bias4.txt");
+for (uint32_t i0 = 0; i0 < 270; i0++){
+outdata <<bias4[i0]<< endl;
+}
+outdata.close();
+
+outdata.open("../Weights/dense.txt");
+for (uint32_t i0 = 0; i0 < 4; i0++){
+for (uint32_t i1 = 0; i1 < 270; i1++){
+outdata <<dense[i0][i1]<< endl;
+}
+}
+outdata.close();
+
 }
